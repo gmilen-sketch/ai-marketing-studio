@@ -1,0 +1,18 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "siteground_wordpress_campaign",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Draft 3 vertical ad scripts for managed WordPress hosting showing off extreme speed and managed tools."}]
+      }
+    },
+    {
+      "eval_case_id": "siteground_cloud_vps_campaign",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Generate a 15-second horizontal promo script for high-speed Cloud VPS featuring 24/7 technical support."}]
+      }
+    }
+  ]
+}

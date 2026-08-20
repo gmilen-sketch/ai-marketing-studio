@@ -1,0 +1,28 @@
+# Python & Virtual Environments
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest & Ruff Caches
+.pytest_cache/
+.ruff_cache/
+*.log
+
+# Temp Render Frames & Dumps
+temp_frames_*
+concat_list_*
+norm_clip_*
+test_*.mp4
+render_*.mp4
+stitched_master_*.mp4
+clip_*.mp4
+
+# Artifacts & System Caches
+artifacts/
+.DS_Store
+.coverage
+htmlcov/
