@@ -1,6 +1,6 @@
-# ⚡ SiteGround AI Marketing Studio (v1.0.0)
+# ⚡ Cloud & Web Hosting AI Marketing Studio (v1.0.0)
 
-> **Enterprise Autonomous Marketing Production Suite** built on an Infinite Node Workbench Canvas powered by **Gemini Omni Multimodal Reasoning**, **Google Veo 3.1 Video Generation**, and **Google Chirp 3 HD Multilingual Speech Synthesis**.
+> **Customer-Agnostic Enterprise Autonomous Marketing Production Suite** built on an Infinite Node Workbench Canvas powered by **Gemini Omni Multimodal Reasoning**, **Google Veo 3.1 Video Generation**, and **Google Chirp 3 HD Multilingual Speech Synthesis**.
 
 ---
 
@@ -38,7 +38,7 @@
 ## 🏗️ Architecture & Project Structure
 
 ```
-siteground-ai-marketing-studio/
+ai-marketing-studio/
 ├── app/
 │   ├── agent.py               # ADK agent reasoning loop & tool declarations
 │   ├── fast_api_app.py        # Production FastAPI server & SSE streaming routes
@@ -55,6 +55,7 @@ siteground-ai-marketing-studio/
 │   ├── test_compositor.py                 # Media stitching unit tests
 │   ├── test_script_engine.py              # Script engine fallback tests
 │   └── integration/                       # Server and ADK streaming integration tests
+├── run_10_journeys.py         # Standalone 10-journey automated browser runner
 ├── Dockerfile                 # Cloud Run deployment container
 ├── pyproject.toml             # Python 3.11+ dependencies & metadata
 └── README.md                  # Comprehensive documentation
@@ -83,9 +84,9 @@ Open **`http://localhost:8080/`** in your browser.
 
 ## 🧪 Testing
 
-Run the full unit and integration test suite:
+Run the unit and integration test suite:
 ```bash
-uv run pytest tests/ -v
+uv run pytest tests/unit tests/integration -v
 ```
 
 Run the **10 Holistic E2E User Journeys**:
@@ -98,8 +99,8 @@ python3 run_10_journeys.py
 ## 🌐 Production Deployment (Cloud Run)
 
 ```bash
-gcloud config set project firsttestproject-343414
-gcloud run deploy siteground-marketing-studio \
+gcloud config set project <YOUR-GCP-PROJECT-ID>
+gcloud run deploy ai-marketing-studio \
   --source . \
   --region us-east1 \
   --allow-unauthenticated

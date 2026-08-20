@@ -240,7 +240,7 @@ def compile_voiceover_and_video(
             f"🎉 **VIDEO GENERATED SUCCESSFULLY!**\n\n"
             f"All campaign assets have been compiled and uploaded to secure Cloud Storage.\n\n"
             f"### 📺 Native Chat Preview:\n"
-            f"![⚡ Click to Play SiteGround Ad Video]({gcs_image_url})\n\n"
+            f"![⚡ Click to Play Cloud Hosting Ad Video]({gcs_image_url})\n\n"
             f"👉 **[🎬 Click Here to Start & Stream Video in Browser Window]({gcs_video_url})**\n\n"
             f"### 📥 Direct Campaign Asset Links (Secure HTTPS):\n"
             f"* **🎬 [Download Completed Campaign Video (MP4)]({gcs_video_url})** *(Recommended: Opens/saves instantly in any browser without Redirect Notices)*\n"
@@ -249,7 +249,7 @@ def compile_voiceover_and_video(
             f"🎬 **Video Specifications:**\n"
             f"- **Format:** MP4 (Vertical 9:16 optimized for YouTube Shorts, Instagram Reels, and TikTok)\n"
             f"- **Voiceover:** Clean, natural narration audio track\n"
-            f"- **Backdrop:** SiteGround high-performance dark theme layout"
+            f"- **Backdrop:** High-performance cloud hosting dark theme layout"
         )
     except Exception as e:
         return f"Error compiling video with ffmpeg: {e!s}"
@@ -257,13 +257,13 @@ def compile_voiceover_and_video(
 
 # Instantiate the official ADK root agent mapping directly to our campaign logic
 root_agent = Agent(
-    name="siteground_video_producer",
+    name="cloud_hosting_video_producer",
     model=Gemini(
         model="gemini-3.5-flash",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction="""
-    You are the SiteGround AI Video Production and Ad Repurposing Agent.
+    You are the Cloud Hosting AI Video Production and Ad Repurposing Agent.
 
     CRITICAL RULE: YOU ARE STRICTLY FORBIDDEN FROM SIMULATING, FAKING, OR PRETENDING TO COMPILE/GENERATE A VIDEO OR AUDIO FILE in your text responses.
 

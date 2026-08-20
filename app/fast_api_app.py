@@ -176,7 +176,7 @@ app.include_router(studio_router)
 @app.get("/ui")
 @app.get("/index.html")
 async def serve_studio_ui():
-    """Serves the SiteGround AI Marketing Studio Web App."""
+    """Serves the CloudHost AI Marketing Studio Web App."""
     index_path = os.path.join(AGENT_DIR, "index.html")
     return FileResponse(index_path)
 
@@ -211,7 +211,7 @@ async def serve_media_root(filename: str):
         elif filename.endswith(".mp3"):
             try:
                 from gtts import gTTS
-                tts = gTTS(text="SiteGround Ultra-Fast Managed WordPress Hosting with Google Cloud Infrastructure.", lang="en")
+                tts = gTTS(text="Ultra-Fast Managed Cloud & WordPress Hosting with Google Cloud Infrastructure.", lang="en")
                 tts.save(file_path)
             except Exception as e:
                 print(f"Fallback audio rendering: {e}")

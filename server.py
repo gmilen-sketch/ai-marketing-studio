@@ -5,7 +5,7 @@ from app.studio_api import router as studio_router
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-app = FastAPI(title="SiteGround AI Marketing Studio")
+app = FastAPI(title="CloudHost AI Marketing Studio")
 app.include_router(studio_router)
 
 @app.get("/")

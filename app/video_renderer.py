@@ -41,14 +41,14 @@ def get_fonts(w, h):
     }
 
 
-def draw_siteground_header(draw, w, h, fonts, tag_text="MANAGED CLOUD"):
+def draw_siteground_header(draw, w, h, fonts, brand_name="CloudHost", tag_text="MANAGED CLOUD"):
     scale = w / 1080.0
     pad_x = int(50 * scale)
     pad_y = int(50 * scale)
 
-    # Official SiteGround Brand Colors: #96CB4C Green, #333230 Black
-    SG_GREEN = (150, 203, 76)
-    SG_BLACK = (51, 50, 48)
+    # Brand Colors: Green Accent #96CB4C, Charcoal Dark #333230
+    BRAND_GREEN = (150, 203, 76)
+    BRAND_BLACK = (51, 50, 48)
 
     # Left Logo Box
     box1_w = int(320 * scale)
@@ -56,15 +56,15 @@ def draw_siteground_header(draw, w, h, fonts, tag_text="MANAGED CLOUD"):
     draw.rounded_rectangle(
         [pad_x, pad_y, pad_x + box1_w, pad_y + box1_h],
         radius=int(16 * scale),
-        fill=SG_GREEN,
+        fill=BRAND_GREEN,
         outline=(180, 230, 110),
         width=int(2 * scale),
     )
     draw.text(
         (pad_x + int(20 * scale), pad_y + int(12 * scale)),
-        "SiteGround",
+        brand_name or "CloudHost",
         font=fonts["title"],
-        fill=SG_BLACK,
+        fill=BRAND_BLACK,
     )
 
     # Right Tag Box

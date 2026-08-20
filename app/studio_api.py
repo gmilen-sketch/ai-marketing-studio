@@ -904,7 +904,7 @@ async def serve_media_file(filename: str):
 PROJECTS_STORE = {
     "proj_wp_speed": {
         "id": "proj_wp_speed",
-        "name": "SiteGround Managed WordPress Speed Promo",
+        "name": "Managed WordPress Cloud Speed Promo",
         "created_at": "2026-08-11",
         "target_audience": "Managed WordPress Owners & E-Commerce Merchants",
         "feature": "3X SuperCacher Speed Boost on Google Cloud",
@@ -928,7 +928,7 @@ PROJECTS_STORE = {
             },
             {
                 "id": "asset_3",
-                "title": "SiteGround Official Green Logo",
+                "title": "CloudHost Official Green Logo",
                 "category": "Brand Identity",
                 "file_path": "/media/sg_logo_badge.png",
                 "thumbnail": "/media/sg_logo_badge.png",
@@ -956,7 +956,7 @@ PROJECTS_STORE = {
         "ready_videos": [
             {
                 "id": "vid_master_9_16",
-                "title": "SiteGround Speed Master Campaign (9:16 Shorts)",
+                "title": "Cloud Speed Master Campaign (9:16 Shorts)",
                 "duration": "0:15",
                 "aspect_ratio": "9:16",
                 "video_url": "/media/render_scene_1.mp4",
@@ -968,7 +968,7 @@ PROJECTS_STORE = {
     },
     "proj_cloud_247": {
         "id": "proj_cloud_247",
-        "name": "Cloud Infrastructure & 24/7 Support Campaign",
+        "name": "Enterprise NVMe Cloud & 24/7 Support Campaign",
         "created_at": "2026-08-10",
         "target_audience": "Agencies & Enterprise Stores",
         "feature": "Google Cloud 24/7 Live Chat Support",
@@ -976,7 +976,7 @@ PROJECTS_STORE = {
         "assets": [
             {
                 "id": "asset_3",
-                "title": "SiteGround Official Green Logo",
+                "title": "CloudHost Official Green Logo",
                 "category": "Brand Identity",
                 "file_path": "/media/sg_logo_badge.png",
                 "thumbnail": "/media/sg_logo_badge.png",
@@ -1002,7 +1002,7 @@ PROJECTS_STORE = {
             },
             {
                 "id": "segment_4",
-                "title": "SiteGround 24/7 Chat Specialist",
+                "title": "24/7 Chat Specialist",
                 "duration": "5s",
                 "video_url": "/media/render_scene_4.mp4",
                 "thumbnail": "/media/sg_logo_badge.png",

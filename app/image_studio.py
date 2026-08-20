@@ -32,8 +32,8 @@ def get_safe_font(size: int):
     return ImageFont.load_default()
 
 
-def overlay_official_logo(img, x=60, y=45, logo_type="white"):
-    """Overlays official SiteGround transparent PNG logo from brand-assets."""
+def overlay_official_logo(img, x=60, y=45, logo_type="white", brand_name="CloudHost"):
+    """Overlays official cloud hosting transparent PNG logo from brand-assets or dynamic brand typography."""
     logo_filename = "sg_logo_white.png" if logo_type == "white" else "sg_logo_black.png"
     logo_path = os.path.join(ASSETS_DIR, logo_filename)
 
@@ -44,11 +44,11 @@ def overlay_official_logo(img, x=60, y=45, logo_type="white"):
             img.paste(logo_img, (x, y), logo_img)
             return
         except Exception as e:
-            print(f"Error pasting official logo: {e}")
+            print(f"Error pasting logo: {e}")
 
     draw = ImageDraw.Draw(img)
     f_logo = get_safe_font(38)
-    draw.text((x, y), "SiteGround", font=f_logo, fill=SG_LOGO_BLACK if logo_type == "black" else SG_LOGO_GREEN)
+    draw.text((x, y), brand_name or "CloudHost", font=f_logo, fill=SG_LOGO_BLACK if logo_type == "black" else SG_LOGO_GREEN)
 
 
 def draw_abcd_badge(draw, w, abcd_type="[A] ATTENTION & [B] BRANDING", is_white_bg=False):

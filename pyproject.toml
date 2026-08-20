@@ -1,9 +1,9 @@
 [project]
-name = "siteground-ai-marketing-studio"
+name = "ai-marketing-studio"
 version = "1.0.0"
-description = "SiteGround AI Marketing Studio: Infinite Canvas Workbench powered by Gemini Omni, Google Veo 3.1, and Chirp 3 HD TTS"
+description = "Customer-Agnostic Enterprise AI Marketing Studio for Cloud & Web Hosting Providers: Infinite Canvas Workbench powered by Gemini Omni, Google Veo 3.1, and Chirp 3 HD TTS"
 authors = [
-    {name = "SiteGround AI Creative Engineering Team", email = "ai-studio@siteground.com"},
+    {name = "Cloud Creative Engineering Team", email = "ai-studio@cloudhost.com"},
 ]
 
 dependencies = [
