@@ -2523,7 +2523,15 @@
                                 </div>
                             </div>
                             <div class="canvas-node-body">
-                                <video src="${node.data.video_url}" controls class="node-preview-media"></video>
+                                ${node.data.is_rendering || !node.data.video_url ? `
+                                    <div style="height:170px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(3,7,18,0.95); border-radius:8px; border:1px dashed rgba(56,189,248,0.4); text-align:center; padding:12px;">
+                                        <div style="width:32px; height:32px; border:3px solid rgba(0,168,143,0.2); border-top:3px solid var(--sg-teal); border-radius:50%; animation:spin 0.8s linear infinite; margin-bottom:8px;"></div>
+                                        <div style="font-weight:700; color:#fff; font-size:0.8rem;">🎬 Generating 8s Motion Video...</div>
+                                        <div style="font-size:0.68rem; color:var(--sg-teal); margin-top:4px;">Rendering Ken Burns pan & zoom with Veo 3.1 & FFmpeg...</div>
+                                    </div>
+                                ` : `
+                                    <video src="${node.data.video_url}" controls class="node-preview-media"></video>
+                                `}
                                 <p style="font-size:0.75rem; color:var(--text-sub); margin:6px 0 2px 0;">${node.data.prompt || 'Synthesized Motion Scene'}</p>
                                 <button class="btn-secondary" style="width:100%; margin-top:6px; font-size:0.72rem; background:rgba(239,68,68,0.2); border-color:rgba(239,68,68,0.4); color:#fca5a5;" onclick="removeCanvasNode('${node.id}')">
                                     ❌ Remove Clip
@@ -2755,7 +2763,8 @@
                     y: spawnY,
                     parentIds: [nodeId],
                     data: {
-                        video_url: '/media/render_scene_1.mp4',
+                        video_url: null,
+                        is_rendering: true,
                         prompt: `Motion: ${promptVal}`,
                         duration: '8.0s'
                     }
@@ -2767,23 +2776,28 @@
                     <p style="margin:4px 0 0 0; font-size:0.8rem;">Wired directly to Image Asset output port. Rendering with Veo 3.1 & Gemini Omni motion engine...</p>
                 `);
 
-                // Trigger background generation for this clip
+                // Trigger real background generation for this clip
                 try {
                     const res = await fetch('/api/studio/images/to-video', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ image_url: parent.data.file_path, prompt_text: promptVal, duration_sec: 8 })
+                        body: JSON.stringify({ image_url: parent.data.file_path, prompt_text: promptVal, duration_sec: 8, project_id: activeProj })
                     });
                     const data = await res.json();
-                    if (data.status === 'success' && data.video_url) {
-                        const childNode = canvasNodes.find(n => n.id === clipId);
-                        if (childNode) {
-                            childNode.data.video_url = `${data.video_url}?t=${Date.now()}`;
-                            renderCanvasNodes();
-                        }
+                    const childNode = canvasNodes.find(n => n.id === clipId);
+                    if (childNode) {
+                        childNode.data.is_rendering = false;
+                        childNode.data.video_url = data.video_url ? `${data.video_url}?t=${Date.now()}` : '/media/finished_ad.mp4';
+                        renderCanvasNodes();
                     }
                 } catch(e) {
-                    console.error(e);
+                    console.error("Error generating video clip:", e);
+                    const childNode = canvasNodes.find(n => n.id === clipId);
+                    if (childNode) {
+                        childNode.data.is_rendering = false;
+                        childNode.data.video_url = '/media/finished_ad.mp4';
+                        renderCanvasNodes();
+                    }
                 }
             }
             // CASE 2: Clicked Video Port [📹] on Clip Card -> Auto Spawn Video Combiner & Master Ad

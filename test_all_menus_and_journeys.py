@@ -162,7 +162,7 @@ async def test_all_menus_and_e2e_journeys():
         await clips.first.wait_for(state="visible", timeout=45000)
         assert await clips.count() >= 1
         video_player = clips.first.locator("video")
-        await video_player.wait_for(state="visible", timeout=10000)
+        await video_player.wait_for(state="visible", timeout=45000)
         print(f"   ✅ Test 6 PASSED: 8s Motion Video Clip Generated & Streaming ({time.time() - t0:.2f}s)")
         test_log.append(("8s Motion Video Clip Generation", "PASSED"))
 
