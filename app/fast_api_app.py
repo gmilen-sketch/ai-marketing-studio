@@ -182,11 +182,16 @@ async def serve_studio_ui():
 
 
 @app.get("/media/{filename}")
+@app.get("/uploads/{filename}")
 async def serve_media_root(filename: str):
     """Serves media asset files (MP4, MP3, PNG) with dynamic generation fallback."""
-    file_path = os.path.join(AGENT_DIR, filename)
+    file_path = os.path.join(AGENT_DIR, "media", filename)
     if not os.path.exists(file_path):
-        file_path = os.path.join(AGENT_DIR, "media", filename)
+        file_path = os.path.join(AGENT_DIR, "assets", filename)
+    if not os.path.exists(file_path):
+        file_path = os.path.join(AGENT_DIR, "uploads", filename)
+    if not os.path.exists(file_path):
+        file_path = os.path.join(AGENT_DIR, filename)
 
     if not os.path.exists(file_path):
         if filename.startswith("asset_") or filename in ("slide.png", "sg_logo_badge.png", "gcp_cloud_badge.png"):
@@ -199,9 +204,7 @@ async def serve_media_root(filename: str):
             elif "discount" in filename or "promo" in filename:
                 asset_type = "discount"
             generate_campaign_asset(asset_type, "")
-            file_path = os.path.join(AGENT_DIR, filename)
-            if not os.path.exists(file_path):
-                file_path = os.path.join(AGENT_DIR, "media", filename)
+            file_path = os.path.join(AGENT_DIR, "media", filename)
         elif filename.endswith(".mp4"):
             try:
                 from app.video_renderer import render_marketing_video
