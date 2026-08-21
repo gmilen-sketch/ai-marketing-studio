@@ -186,19 +186,14 @@ async def test_all_menus_and_e2e_journeys():
         test_log.append(("In-Card Live Voiceover Translation", "PASSED"))
 
         # ----------------------------------------------------------------------
-        # TEST 9: ⚡ 50+ Multivariate Creative Expansion Matrix (Single Unified Card!)
+        # TEST 9: ⚡ 50+ Multivariate Creative Expansion Matrix (Spawn from Narrative!)
         # ----------------------------------------------------------------------
         t0 = time.time()
-        print("▶️ [TEST 9/12] Spawning & Testing Unified 50+ Creative Expansion Matrix Card...")
+        print("▶️ [TEST 9/12] Spawning & Testing Unified 50+ Matrix Card Directly from Narrative...")
         
-        # Click 50+ Variations button in topbar
-        var_btn = page.locator("button:has-text('⚡ 50+ Variations')")
-        await var_btn.click(force=True)
-
-        matrix_modal = page.locator("#prompt-options-modal")
-        if await matrix_modal.is_visible():
-            await page.locator("#modal-submit-btn").click(force=True)
-            await matrix_modal.wait_for(state="hidden", timeout=10000)
+        # Click 50+ Matrix directly on narrative card
+        nar_matrix_btn = first_nar.locator("button:has-text('⚡ 50+ Matrix')")
+        await nar_matrix_btn.click(force=True)
 
         matrix_nodes = page.locator(".canvas-node[id^='node-matrix_']")
         await matrix_nodes.first.wait_for(state="visible", timeout=15000)
@@ -238,8 +233,8 @@ async def test_all_menus_and_e2e_journeys():
         await m.locator("button:has-text('Bulk Push 50 Bundles')").click(force=True)
         await page.wait_for_timeout(1000)
 
-        print(f"   ✅ Test 9 PASSED: Single Unified 50+ Matrix Card & All Controls Verified ({time.time() - t0:.2f}s)")
-        test_log.append(("Unified 50+ Multivariate Matrix Card", "PASSED"))
+        print(f"   ✅ Test 9 PASSED: Single Unified 50+ Matrix Card Spawned from Narrative & All Controls Verified ({time.time() - t0:.2f}s)")
+        test_log.append(("Unified 50+ Matrix Card (Narrative Spawned)", "PASSED"))
 
         # ----------------------------------------------------------------------
         # TEST 10: Video Combiner & Master Ad Stitching
