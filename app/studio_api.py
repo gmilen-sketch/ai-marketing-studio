@@ -1492,9 +1492,10 @@ async def generate_clip_from_pictures(request: Request):
     return {"status": "success", "clip": new_segment, "video_url": clip_url}
 
 
+@router.post("/assistant")
 @router.post("/copilot")
-async def studio_copilot(request: Request):
-    """Natural Language Studio Copilot for orchestrating workbench tasks."""
+async def studio_assistant(request: Request):
+    """Natural Language Studio Assistant for orchestrating workbench tasks."""
     body = await request.json()
     message = (body.get("user_message") or "").strip()
     project_id = body.get("project_id")
@@ -1646,7 +1647,7 @@ async def studio_copilot(request: Request):
         return {
             "status": "success",
             "action": "info",
-            "reply": f"🤖 **SiteGround AI Studio Copilot**: I received your request: \"{message}\".\n\n**Try typing commands like**:\n- `Generate 3 narratives for 3X Speed Boost`\n- `Generate pictures for Narrative 1`\n- `Update picture prompt to 3X speed gauge glowing green`\n- `From pictures 1 and 2 create video clip showing speed acceleration`\n- `Stitch video clips into master ad`\n- `Deploy campaign to Google Ads`"
+            "reply": f"🤖 **SiteGround AI Studio Assistant**: I received your request: \"{message}\".\n\n**Try typing commands like**:\n- `Generate 3 narratives for 3X Speed Boost`\n- `Generate pictures for Narrative 1`\n- `Update picture prompt to 3X speed gauge glowing green`\n- `From pictures 1 and 2 create video clip showing speed acceleration`\n- `Stitch video clips into master ad`\n- `Deploy campaign to Google Ads`"
         }
 
 
