@@ -2069,7 +2069,10 @@
                                 <div id="launcher-tab-telemetry-${node.id}" style="display:${activeTab === 'telemetry' ? 'flex' : 'none'}; flex-direction:column; gap:6px; background:rgba(3,7,18,0.85); padding:8px; border-radius:6px; border:1px solid rgba(56,189,248,0.3);">
                                     <div style="font-size:0.7rem; font-weight:800; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
                                         <span>📊 BigQuery Live Telemetry RAG</span>
-                                        <span class="rag-query-status" style="color:var(--sg-green); font-size:0.62rem; background:rgba(16,185,129,0.15); padding:1px 6px; border-radius:4px;">🟢 Live Match (firsttestproject-343414)</span>
+                                        <div style="display:flex; align-items:center; gap:4px;">
+                                            <button class="fab-btn fab-btn-secondary" style="height:18px; padding:0 6px; font-size:0.6rem; color:#38bdf8; border-color:rgba(56,189,248,0.4);" onclick="fetchDynamicBigQueryRAG('${node.id}')" title="Re-query BigQuery">🔄 Re-Query</button>
+                                            <span class="rag-query-status" style="color:var(--sg-green); font-size:0.62rem; background:rgba(16,185,129,0.15); padding:1px 6px; border-radius:4px;">🟢 Live Match (firsttestproject-343414)</span>
+                                        </div>
                                     </div>
                                     <div style="font-size:0.68rem; line-height:1.4; color:var(--text-sub);" id="rag-content-${node.id}">
                                         • <b>Top PMax CTR Hook</b>: <i>"Is your slow website killing your sales? 1s delay = 7% loss"</i> (<b style="color:var(--sg-green);">8.84% CTR</b>, 14.2% Conv)<br>
