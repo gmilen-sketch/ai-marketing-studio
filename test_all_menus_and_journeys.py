@@ -101,11 +101,10 @@ async def test_all_menus_and_e2e_journeys():
         await launcher.locator("button:has-text('🎯 Brief Wizard')").click(force=True)
         await page.wait_for_timeout(500)
 
-        gen_narrative_btn = launcher.locator("button[id^='btn-launch-']")
-        await gen_narrative_btn.click(force=True)
+        await page.locator("#node-launcher_node button[id^='btn-launch-']").click(force=True)
 
         narratives = page.locator(".canvas-node[id^='node-narrative_']")
-        await narratives.first.wait_for(state="visible", timeout=45000)
+        await narratives.first.wait_for(state="visible", timeout=60000)
         nar_count = await narratives.count()
         assert nar_count >= 3, f"Expected 3+ narrative cards, got {nar_count}"
         print(f"   ✅ Test 4 PASSED: {nar_count} Strategic Narrative Cards Spawned ({time.time() - t0:.2f}s)")

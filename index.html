@@ -2220,14 +2220,17 @@
                                 </div>
 
                                 <!-- Dynamic Live Variation Preview Container -->
-                                <div id="matrix-preview-wrap-${node.id}" style="position:relative; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); border-radius:8px; overflow:hidden; min-height:160px; display:flex; align-items:center; justify-content:center;">
-                                    <img id="matrix-preview-img-${node.id}" src="${node.data.base_image || '/media/asset_supercacher_speed.png'}" style="width:100%; height:160px; object-fit:cover; transition:all 0.3s ease;">
+                                <div id="matrix-preview-wrap-${node.id}" style="position:relative; background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:8px; overflow:hidden; min-height:160px; display:flex; align-items:center; justify-content:center;">
+                                    <img id="matrix-preview-img-${node.id}" 
+                                         src="${node.data.base_image || '/media/asset_supercacher_speed.png'}" 
+                                         onerror="this.onerror=null; this.src='/media/asset_supercacher_speed.png';" 
+                                         style="width:100%; height:${ratio === '9:16' ? '220px' : (ratio === '1:1' ? '180px' : '155px')}; object-fit:cover; transition:all 0.3s ease; ${pal === 'emerald' ? 'filter: brightness(0.85) contrast(1.25) hue-rotate(140deg) saturate(1.4);' : (pal === 'white' ? 'filter: brightness(1.15) contrast(1.08) saturate(0.85);' : (pal === 'cyan' ? 'filter: brightness(0.95) contrast(1.3) hue-rotate(185deg) saturate(1.35);' : 'filter: contrast(1.05) saturate(1.1);'))}">
                                     
                                     <!-- Live Simulated Overlay -->
                                     <div id="matrix-preview-overlay-${node.id}" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); display:flex; justify-content:space-between; align-items:center;">
                                         <div>
-                                            <div id="matrix-headline-${node.id}" style="font-weight:800; font-size:0.75rem; color:#fff;">3X Speed Boost • Google Cloud NVMe</div>
-                                            <div id="matrix-badge-tag-${node.id}" style="font-size:0.65rem; color:var(--sg-green);">${lang} • ${ratio} • ${pal}</div>
+                                            <div id="matrix-headline-${node.id}" style="font-weight:800; font-size:0.75rem; color:#fff;">${node.data.headline || '3X Speed Boost • Google Cloud NVMe'}</div>
+                                            <div id="matrix-badge-tag-${node.id}" style="font-size:0.65rem; color:var(--sg-green);">${lang} • ${ratio} • ${palLabels[pal] || pal}</div>
                                         </div>
                                         <span class="badge badge-teal" style="font-size:0.62rem;">96% ABCD</span>
                                     </div>
@@ -4319,9 +4322,7 @@
                 // Generate Images for all selected narratives with custom promptVal
                 const selNarratives = canvasNodes.filter(n => selectedNodeIds.has(n.id) && n.type === 'narrative');
                 if (selNarratives.length > 0) {
-                    for (const nar of selNarratives) {
-                        await generateImagesForNarrativeNode(nar.id, promptVal);
-                    }
+                    await Promise.all(selNarratives.map(nar => generateImagesForNarrativeNode(nar.id, promptVal)));
                 } else {
                     // Fallback create an image node directly
                     const res = await fetch('/api/studio/images/generate', {
@@ -4357,6 +4358,9 @@
                 
                 canvasNodes = canvasNodes.filter(n => n.type !== 'expansion_matrix');
                 
+                const baseImg = targetNode ? targetNode.data.file_path : '/media/asset_supercacher_speed.png';
+                const finalPrompt = promptVal || (targetNode ? targetNode.data.prompt : 'SiteGround 3X Speed Boost Campaign');
+
                 canvasNodes.push({
                     id: matrixId,
                     type: 'expansion_matrix',
@@ -4364,11 +4368,19 @@
                     y: targetNode ? targetNode.y : (targetNar.length > 0 ? targetNar[0].y : 140),
                     parentIds: targetNode ? [targetNode.id] : (targetNar.length > 0 ? [targetNar[0].id] : (selectedArray.length > 0 ? selectedArray : ['launcher_node'])),
                     data: {
-                        base_image: targetNode ? targetNode.data.file_path : '/media/asset_supercacher_speed.png',
+                        sourceImage: baseImg,
+                        base_image: baseImg,
                         active_palette: 'green',
                         active_lang: 'en-US',
                         active_ratio: '16:9',
-                        prompt: promptVal || 'SiteGround 3X Speed Boost Campaign'
+                        prompt: finalPrompt,
+                        headline: finalPrompt,
+                        paletteImages: {
+                            'green': baseImg,
+                            'emerald': baseImg,
+                            'white': baseImg,
+                            'cyan': baseImg
+                        }
                     }
                 });
                 closePromptOptionsModal();
@@ -4378,6 +4390,26 @@
                     <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">⚡ 50+ Multivariate Creative Expansion Matrix</div>
                     <p style="margin:4px 0 0 0; font-size:0.8rem;">Spawned single matrix card for 4 Palettes × 8 Languages × 3 Aspect Ratios.</p>
                 `);
+
+                fetch('/api/studio/images/variations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_url: baseImg, prompt_text: finalPrompt })
+                }).then(res => res.json()).then(data => {
+                    if (data.status === 'success' && data.variations && data.variations.length >= 4) {
+                        const mNode = canvasNodes.find(n => n.id === matrixId);
+                        if (mNode) {
+                            mNode.data.paletteImages = {
+                                'green': data.variations[0].image_url,
+                                'emerald': data.variations[1].image_url,
+                                'white': data.variations[3].image_url,
+                                'cyan': data.variations[2].image_url
+                            };
+                            mNode.data.base_image = mNode.data.paletteImages[mNode.data.active_palette || 'green'];
+                            renderCanvasNodes();
+                        }
+                    }
+                }).catch(e => console.error(e));
                 return;
             } else if (activeModalAction === 'clip') {
                 const picUrls = canvasNodes.filter(n => selectedNodeIds.has(n.id) && n.type === 'image').map(n => n.data.file_path);
@@ -5797,6 +5829,7 @@
             // Find if there is a child image card created from this narrative
             const childImg = canvasNodes.find(n => n.type === 'image' && (n.parentIds || []).includes(narId));
             const baseImg = childImg ? childImg.data.file_path : '/media/asset_supercacher_speed.png';
+            const promptVal = nar ? (nar.data.hook_text || nar.data.title) : 'SiteGround 3X Speed Boost Campaign';
             
             // Keep single matrix card on canvas
             canvasNodes = canvasNodes.filter(n => n.type !== 'expansion_matrix');
@@ -5808,11 +5841,19 @@
                 y: nar ? nar.y : 140,
                 parentIds: nar ? [nar.id] : ['launcher_node'],
                 data: {
+                    sourceImage: baseImg,
                     base_image: baseImg,
                     active_palette: 'green',
                     active_lang: 'en-US',
                     active_ratio: '16:9',
-                    prompt: nar ? (nar.data.hook_text || nar.data.title) : 'SiteGround 3X Speed Boost Campaign'
+                    prompt: promptVal,
+                    headline: promptVal,
+                    paletteImages: {
+                        'green': baseImg,
+                        'emerald': baseImg,
+                        'white': baseImg,
+                        'cyan': baseImg
+                    }
                 }
             });
             renderCanvasNodes();
@@ -5820,12 +5861,34 @@
                 <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">⚡ 50+ Multivariate Creative Expansion Matrix</div>
                 <p style="margin:4px 0 0 0; font-size:0.8rem;">Spawned single matrix card for 4 Palettes × 8 Languages × 3 Aspect Ratios from Narrative.</p>
             `);
+
+            fetch('/api/studio/images/variations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_url: baseImg, prompt_text: promptVal })
+            }).then(res => res.json()).then(data => {
+                if (data.status === 'success' && data.variations && data.variations.length >= 4) {
+                    const mNode = canvasNodes.find(n => n.id === matrixId);
+                    if (mNode) {
+                        mNode.data.paletteImages = {
+                            'green': data.variations[0].image_url,
+                            'emerald': data.variations[1].image_url,
+                            'white': data.variations[3].image_url,
+                            'cyan': data.variations[2].image_url
+                        };
+                        mNode.data.base_image = mNode.data.paletteImages[mNode.data.active_palette || 'green'];
+                        renderCanvasNodes();
+                    }
+                }
+            }).catch(e => console.error("Matrix variations error:", e));
         }
 
         function spawnMatrixForImageNode(imgId) {
             const imgNode = canvasNodes.find(n => n.id === imgId);
             const maxX = canvasNodes.length > 0 ? Math.max(...canvasNodes.map(n => (n.x || 0) + 400)) : 800;
             const matrixId = `matrix_${Date.now()}`;
+            const baseImg = imgNode ? imgNode.data.file_path : '/media/asset_supercacher_speed.png';
+            const promptVal = imgNode ? imgNode.data.prompt : 'SiteGround 3X Speed Boost Campaign';
             
             canvasNodes = canvasNodes.filter(n => n.type !== 'expansion_matrix');
             
@@ -5836,14 +5899,42 @@
                 y: imgNode ? imgNode.y : 140,
                 parentIds: imgNode ? [imgNode.id] : ['launcher_node'],
                 data: {
-                    base_image: imgNode ? imgNode.data.file_path : '/media/asset_supercacher_speed.png',
+                    sourceImage: baseImg,
+                    base_image: baseImg,
                     active_palette: 'green',
                     active_lang: 'en-US',
                     active_ratio: '16:9',
-                    prompt: imgNode ? imgNode.data.prompt : 'SiteGround 3X Speed Boost Campaign'
+                    prompt: promptVal,
+                    headline: promptVal,
+                    paletteImages: {
+                        'green': baseImg,
+                        'emerald': baseImg,
+                        'white': baseImg,
+                        'cyan': baseImg
+                    }
                 }
             });
             renderCanvasNodes();
+
+            fetch('/api/studio/images/variations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_url: baseImg, prompt_text: promptVal })
+            }).then(res => res.json()).then(data => {
+                if (data.status === 'success' && data.variations && data.variations.length >= 4) {
+                    const mNode = canvasNodes.find(n => n.id === matrixId);
+                    if (mNode) {
+                        mNode.data.paletteImages = {
+                            'green': data.variations[0].image_url,
+                            'emerald': data.variations[1].image_url,
+                            'white': data.variations[3].image_url,
+                            'cyan': data.variations[2].image_url
+                        };
+                        mNode.data.base_image = mNode.data.paletteImages[mNode.data.active_palette || 'green'];
+                        renderCanvasNodes();
+                    }
+                }
+            }).catch(e => console.error("Matrix variations error:", e));
         }
 
         function switchMatrixPalette(nodeId, pal, btnEl) {
@@ -5851,13 +5942,11 @@
             if (!node) return;
             node.data.active_palette = pal;
             
-            const palImages = {
-                'green': '/media/asset_supercacher_speed.png',
-                'emerald': '/media/asset_discount_80_promo.png',
-                'white': '/media/asset_trustpilot_support.png',
-                'cyan': '/media/asset_500_error.png'
-            };
-            node.data.base_image = palImages[pal] || '/media/asset_supercacher_speed.png';
+            if (node.data.paletteImages && node.data.paletteImages[pal]) {
+                node.data.base_image = node.data.paletteImages[pal];
+            } else if (node.data.sourceImage) {
+                node.data.base_image = node.data.sourceImage;
+            }
             renderCanvasNodes();
         }
 

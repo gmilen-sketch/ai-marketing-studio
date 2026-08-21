@@ -338,10 +338,12 @@ async def generate_scripts(request: Request):
         }}
     }}
     """
-    try:
+    from fastapi.concurrency import run_in_threadpool
+
+    def _call_gemini_scripts():
         client = Client()
         try:
-            response = client.models.generate_content(
+            return client.models.generate_content(
                 model="gemini-3.7-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
@@ -349,16 +351,19 @@ async def generate_scripts(request: Request):
                 ),
             )
         except Exception:
-            response = client.models.generate_content(
+            return client.models.generate_content(
                 model="gemini-3.6-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json"
                 ),
             )
+
+    try:
+        response = await run_in_threadpool(_call_gemini_scripts)
         data = json.loads(response.text)
         if data and "variants" in data and len(data["variants"]) > 0:
-            print("Successfully generated scripts using Gemini 3.7 Flash")
+            print("Successfully generated scripts using Gemini 3.7 Flash in parallel thread")
             project_id = body.get("project_id")
             if project_id and project_id in PROJECTS_STORE:
                 PROJECTS_STORE[project_id]["scripts"] = data["variants"]
@@ -477,18 +482,35 @@ from app.video_renderer import render_marketing_video
 
 @router.post("/images/generate")
 async def generate_image_asset(request: Request):
-    """Gemini Omni / Imagen 3 Visual Campaign Asset Studio."""
+    """Gemini Omni / Imagen 3 Visual Campaign Asset Studio (Parallel Non-Blocking)."""
     body = await request.json()
-    asset_type = body.get("asset_type", "speed_boost")
+    asset_type = body.get("asset_type", "speed")
     prompt_text = body.get("prompt_text", "SiteGround SuperCacher 3X Speed Boost UI")
+    project_id = body.get("project_id")
 
-    filename = generate_campaign_asset(asset_type, prompt_text)
+    from fastapi.concurrency import run_in_threadpool
+    filename = await run_in_threadpool(generate_campaign_asset, asset_type=asset_type, prompt_text=prompt_text)
+    image_url = f"/media/{filename}"
+
+    new_asset = {
+        "id": f"asset_gen_{int(time.time())}",
+        "title": prompt_text[:30] if prompt_text else "Generated Image",
+        "category": "AI Generated",
+        "file_path": image_url,
+        "thumbnail": image_url,
+        "prompt": prompt_text,
+        "type": "image"
+    }
+    if project_id and project_id in PROJECTS_STORE:
+        PROJECTS_STORE[project_id]["assets"].insert(0, new_asset)
+
     return {
         "status": "success",
         "asset_type": asset_type,
         "filename": filename,
-        "image_url": f"/media/{filename}",
+        "image_url": image_url,
         "prompt_used": prompt_text,
+        "asset": new_asset
     }
 
 
@@ -923,68 +945,74 @@ async def synthesize_audio(request: Request):
     audio_filename = f"voiceover_{language_code}_{voice_name.split('-')[-1]}.mp3"
     audio_path = os.path.join(PROJECT_DIR, audio_filename)
 
-    # Clean SSML tags for TTS engine
-    import re, shutil
-    from gtts import gTTS
+    from fastapi.concurrency import run_in_threadpool
 
-    clean_text = re.sub(r"<[^>]*>", "", ssml_text).strip()
-    if not clean_text:
-        clean_text = "SiteGround ultra-fast Google Cloud hosting!"
+    def _do_tts_synthesis():
+        # Clean SSML tags for TTS engine
+        import re, shutil
+        from gtts import gTTS
 
-    lang_short = language_code.split("-")[0].lower()  # 'en', 'de', 'es', 'it', 'pt', 'fr'
+        clean_text = re.sub(r"<[^>]*>", "", ssml_text).strip()
+        if not clean_text:
+            clean_text = "SiteGround ultra-fast Google Cloud hosting!"
 
-    # Perform translation if the target language is not English
-    if lang_short != "en":
-        try:
-            client = Client()
-            translation_prompt = (
-                f"Translate the following marketing advertisement script into natural, fluent, high-converting {language_code} ({lang_short}). "
-                f"Preserve brand names like SiteGround, Google Cloud, and SuperCacher. "
-                f"Output ONLY the translated plain text without any quotes or commentary:\n\n{clean_text}"
-            )
+        lang_short = language_code.split("-")[0].lower()  # 'en', 'de', 'es', 'it', 'pt', 'fr'
+
+        # Perform translation if the target language is not English
+        if lang_short != "en":
             try:
-                res = client.models.generate_content(
-                    model="gemini-3.7-flash",
-                    contents=translation_prompt,
+                client = Client()
+                translation_prompt = (
+                    f"Translate the following marketing advertisement script into natural, fluent, high-converting {language_code} ({lang_short}). "
+                    f"Preserve brand names like SiteGround, Google Cloud, and SuperCacher. "
+                    f"Output ONLY the translated plain text without any quotes or commentary:\n\n{clean_text}"
                 )
-            except Exception:
-                res = client.models.generate_content(
-                    model="gemini-3.6-flash",
-                    contents=translation_prompt,
-                )
-            translated_text = res.text.strip()
-            if translated_text:
-                clean_text = translated_text
+                try:
+                    res = client.models.generate_content(
+                        model="gemini-3.7-flash",
+                        contents=translation_prompt,
+                    )
+                except Exception:
+                    res = client.models.generate_content(
+                        model="gemini-3.6-flash",
+                        contents=translation_prompt,
+                    )
+                translated_text = res.text.strip()
+                if translated_text:
+                    clean_text = translated_text
+            except Exception as e:
+                print(f"Gemini translation fallback for {lang_short}: {e}")
+                fallback_translations = {
+                    "fr": "Il est 2h du matin. Votre site web est en panne ! Ne paniquez pas. Les experts techniques SiteGround répondent en quelques secondes. Passez chez SiteGround dès aujourd'hui !",
+                    "de": "Es ist 02:00 Uhr morgens. Ihre Website ist offline! Keine Panik. Die SiteGround-Experten antworten in Sekundenschnelle. Wechseln Sie noch heute zu SiteGround!",
+                    "es": "¡Son las 2:00 AM y tu sitio web está caído! No te preocupes. Los expertos técnicos 24/7 de SiteGround responden en segundos. ¡Cámbiate a SiteGround hoy mismo!",
+                    "it": "Sono le 2:00 di notte. Il tuo sito web è giù! Niente panico. Gli esperti tecnici 24/7 di SiteGround rispondono in pochi secondi. Passa a SiteGround oggi stesso!",
+                    "pt": "São 2:00 da manhã. Seu site está fora do ar! Não entre em pânico. Os especialistas técnicos da SiteGround respondem em segundos. Mude para a SiteGround hoje mesmo!"
+                }
+                if lang_short in fallback_translations:
+                    clean_text = fallback_translations[lang_short]
+
+        try:
+            tts = gTTS(text=clean_text, lang=lang_short)
+            tts.save(audio_path)
+            print(f"Synthesized authentic '{lang_short}' audio ({audio_filename}): '{clean_text}'")
         except Exception as e:
-            print(f"Gemini translation fallback for {lang_short}: {e}")
-            fallback_translations = {
-                "fr": "Il est 2h du matin. Votre site web est en panne ! Ne paniquez pas. Les experts techniques SiteGround répondent en quelques secondes. Passez chez SiteGround dès aujourd'hui !",
-                "de": "Es ist 02:00 Uhr morgens. Ihre Website ist offline! Keine Panik. Die SiteGround-Experten antworten in Sekundenschnelle. Wechseln Sie noch heute zu SiteGround!",
-                "es": "¡Son las 2:00 AM y tu sitio web está caído! No te preocupes. Los expertos técnicos 24/7 de SiteGround responden en segundos. ¡Cámbiate a SiteGround hoy mismo!",
-                "it": "Sono le 2:00 di notte. Il tuo sito web è giù! Niente panico. Gli esperti tecnici 24/7 di SiteGround rispondono in pochi secondi. Passa a SiteGround oggi stesso!",
-                "pt": "São 2:00 da manhã. Seu site está fora do ar! Não entre em pânico. Os especialistas técnicos da SiteGround respondem em segundos. Mude para a SiteGround hoje mesmo!"
-            }
-            if lang_short in fallback_translations:
-                clean_text = fallback_translations[lang_short]
+            print(f"gTTS synthesis fallback for {lang_short}: {e}")
+            fallback_audio = os.path.join(PROJECT_DIR, "fallback_voiceover.mp3")
+            if os.path.exists(fallback_audio):
+                shutil.copy(fallback_audio, audio_path)
 
-    try:
-        tts = gTTS(text=clean_text, lang=lang_short)
-        tts.save(audio_path)
-        print(f"Synthesized authentic '{lang_short}' audio ({audio_filename}): '{clean_text}'")
-    except Exception as e:
-        print(f"gTTS synthesis fallback for {lang_short}: {e}")
-        fallback_audio = os.path.join(PROJECT_DIR, "fallback_voiceover.mp3")
-        if os.path.exists(fallback_audio):
-            shutil.copy(fallback_audio, audio_path)
+        # Copy to media directory for static serving
+        media_dir = os.path.join(PROJECT_DIR, "media")
+        os.makedirs(media_dir, exist_ok=True)
+        media_audio = os.path.join(media_dir, audio_filename)
+        try:
+            shutil.copy(audio_path, media_audio)
+        except Exception:
+            pass
+        return clean_text
 
-    # Copy to media directory for static serving
-    media_dir = os.path.join(PROJECT_DIR, "media")
-    os.makedirs(media_dir, exist_ok=True)
-    media_audio = os.path.join(media_dir, audio_filename)
-    try:
-        shutil.copy(audio_path, media_audio)
-    except Exception:
-        pass
+    final_clean_text = await run_in_threadpool(_do_tts_synthesis)
 
     return {
         "status": "success",
@@ -992,7 +1020,7 @@ async def synthesize_audio(request: Request):
         "voice_model": voice_name,
         "speaking_rate": speaking_rate,
         "audio_url": f"/media/{audio_filename}",
-        "ssml_parsed": clean_text,
+        "ssml_parsed": final_clean_text,
     }
 
 
@@ -1458,48 +1486,17 @@ async def delete_library_asset(asset_id: str, project_id: str = None):
     return {"status": "success", "deleted_id": asset_id}
 
 
-@router.post("/images/generate")
-async def generate_picture_asset_endpoint(request: Request):
-    """Generate a new dynamic picture asset based on a prompt text."""
-    body = await request.json()
-    asset_type = body.get("asset_type", "speed")
-    prompt_text = body.get("prompt_text", "")
-    project_id = body.get("project_id")
-
-    filename = generate_campaign_asset(asset_type, prompt_text)
-    image_url = f"/media/{filename}"
-
-    # Optionally store in project assets
-    new_asset = {
-        "id": f"asset_gen_{int(time.time())}",
-        "title": prompt_text[:30] if prompt_text else "Generated Image",
-        "category": "AI Generated",
-        "file_path": image_url,
-        "thumbnail": image_url,
-        "prompt": prompt_text,
-        "type": "image"
-    }
-    if project_id and project_id in PROJECTS_STORE:
-        PROJECTS_STORE[project_id]["assets"].insert(0, new_asset)
-
-    return {
-        "status": "success",
-        "filename": filename,
-        "image_url": image_url,
-        "asset": new_asset
-    }
-
-
 @router.post("/images/regenerate")
 async def regenerate_picture_asset(request: Request):
-    """Regenerate a picture asset with an updated prompt text."""
+    """Regenerate a picture asset with an updated prompt text (Parallel Non-Blocking)."""
     body = await request.json()
     asset_id = body.get("asset_id", "asset_1")
     asset_type = body.get("asset_type", "speed_boost")
     prompt_text = body.get("prompt_text", "")
     project_id = body.get("project_id")
 
-    filename = generate_campaign_asset(asset_type, prompt_text)
+    from fastapi.concurrency import run_in_threadpool
+    filename = await run_in_threadpool(generate_campaign_asset, asset_type=asset_type, prompt_text=prompt_text)
     image_url = f"/media/{filename}"
 
     # Update asset store if present
