@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ⚡ Cloud & Web Hosting AI Marketing Studio (v1.0.0)
 
 > **Customer-Agnostic Enterprise Autonomous Marketing Production Suite** built on an Infinite Node Workbench Canvas powered by **Gemini Omni Multimodal Reasoning**, **Google Veo 3.1 Video Generation**, and **Google Chirp 3 HD Multilingual Speech Synthesis**.
@@ -99,9 +100,14 @@ python3 run_10_journeys.py
 ## 🌐 Production Deployment (Cloud Run)
 
 ```bash
+# Automated Turnkey Deployment
+./deploy_to_project.sh <YOUR-GCP-PROJECT-ID> us-east1
+
+# Direct gcloud deploy
 gcloud config set project <YOUR-GCP-PROJECT-ID>
 gcloud run deploy ai-marketing-studio \
   --source . \
   --region us-east1 \
   --allow-unauthenticated
 ```
+
