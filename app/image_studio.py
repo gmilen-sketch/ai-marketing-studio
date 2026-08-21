@@ -616,13 +616,24 @@ def upscale_campaign_asset(image_name: str, scale_factor: int = 2) -> dict:
     }
 
 
-def generate_image_variations(image_name: str, prompt_text: str = "") -> dict:
-    """Generates 4 distinct thematic and stylistic variations of a campaign asset."""
+# Project-scoped variations cache: { project_id: { prompt_key: variations_dict } }
+PROJECT_VARIATIONS_CACHE = {}
+
+def generate_image_variations(image_name: str, prompt_text: str = "", project_id: str = None) -> dict:
+    """Generates 4 distinct thematic and stylistic variations of a campaign asset, scoped strictly to project_id."""
+    clean_proj = project_id or "default_project"
+    cache_key = hashlib.md5(f"{image_name}_{prompt_text}".encode()).hexdigest()
+
+    # Rule: use cached items ONLY within the same project. New project has 0 caching!
+    if clean_proj in PROJECT_VARIATIONS_CACHE and cache_key in PROJECT_VARIATIONS_CACHE[clean_proj]:
+        print(f"Returning project-isolated cached variations for project: {clean_proj}")
+        return PROJECT_VARIATIONS_CACHE[clean_proj][cache_key]
+
     palettes = [
-        {"name": "Signature Brand Green", "prompt": f"{prompt_text}. SiteGround brand signature emerald green with gold stars"},
-        {"name": "Deep Cobalt Navy", "prompt": f"{prompt_text}. Deep cobalt navy blue background with cyan speed streaks"},
-        {"name": "Emerald Speed Glow", "prompt": f"{prompt_text}. High tech neon green speed benchmark with glowing particles"},
-        {"name": "Clean Editorial White", "prompt": f"{prompt_text}. Clean crisp white background with bold black typography"}
+        {"name": "Signature Brand Green", "key": "green", "prompt": f"{prompt_text}. SiteGround brand signature emerald green with gold stars"},
+        {"name": "Deep Obsidian & Emerald", "key": "emerald", "prompt": f"{prompt_text}. Deep obsidian navy blue background with emerald glowing streaks"},
+        {"name": "Clean Studio White", "key": "white", "prompt": f"{prompt_text}. Clean crisp studio white background with bold typography"},
+        {"name": "High-Contrast Cyan", "key": "cyan", "prompt": f"{prompt_text}. Cyberpunk high-contrast cyan with speed benchmarks"}
     ]
 
     import concurrent.futures
@@ -633,6 +644,7 @@ def generate_image_variations(image_name: str, prompt_text: str = "") -> dict:
         return {
             "variant_id": f"var_{idx+1}",
             "palette": p["name"],
+            "key": p["key"],
             "prompt": p["prompt"],
             "filename": v_filename,
             "image_url": f"/media/{v_filename}"
@@ -641,10 +653,17 @@ def generate_image_variations(image_name: str, prompt_text: str = "") -> dict:
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         variations = list(executor.map(_generate_single_variation, enumerate(palettes)))
 
-    return {
+    res_data = {
         "status": "success",
+        "project_id": clean_proj,
         "count": len(variations),
         "variations": variations
     }
+
+    if clean_proj not in PROJECT_VARIATIONS_CACHE:
+        PROJECT_VARIATIONS_CACHE[clean_proj] = {}
+    PROJECT_VARIATIONS_CACHE[clean_proj][cache_key] = res_data
+
+    return res_data
 
 

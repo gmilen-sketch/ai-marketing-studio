@@ -707,10 +707,11 @@ async def variations_image_endpoint(request: Request):
     body = await request.json()
     image_name = body.get("image_url", body.get("image_name", "asset_supercacher_speed.png"))
     prompt_text = body.get("prompt_text", "SiteGround 3X Speed Boost UI")
+    project_id = body.get("project_id", "proj_wp_speed")
     
     from fastapi.concurrency import run_in_threadpool
     from app.image_studio import generate_image_variations
-    res = await run_in_threadpool(generate_image_variations, image_name=image_name, prompt_text=prompt_text)
+    res = await run_in_threadpool(generate_image_variations, image_name=image_name, prompt_text=prompt_text, project_id=project_id)
     return res
 
 

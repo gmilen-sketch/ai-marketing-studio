@@ -2334,20 +2334,32 @@
                                 </div>
 
                                 <!-- Dynamic Live Variation Preview Container -->
-                                <div id="matrix-preview-wrap-${node.id}" style="position:relative; background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:8px; overflow:hidden; min-height:160px; display:flex; align-items:center; justify-content:center;">
-                                    <img id="matrix-preview-img-${node.id}" 
-                                         src="${node.data.base_image || '/media/asset_supercacher_speed.png'}" 
-                                         onerror="this.onerror=null; this.src='/media/asset_supercacher_speed.png';" 
-                                         style="width:100%; height:${ratio === '9:16' ? '220px' : (ratio === '1:1' ? '180px' : '155px')}; object-fit:cover; transition:all 0.3s ease; ${pal === 'emerald' ? 'filter: brightness(0.85) contrast(1.25) hue-rotate(140deg) saturate(1.4);' : (pal === 'white' ? 'filter: brightness(1.15) contrast(1.08) saturate(0.85);' : (pal === 'cyan' ? 'filter: brightness(0.95) contrast(1.3) hue-rotate(185deg) saturate(1.35);' : 'filter: contrast(1.05) saturate(1.1);'))}">
-                                    
-                                    <!-- Live Simulated Overlay -->
-                                    <div id="matrix-preview-overlay-${node.id}" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); display:flex; justify-content:space-between; align-items:center;">
-                                        <div>
-                                            <div id="matrix-headline-${node.id}" style="font-weight:800; font-size:0.75rem; color:#fff;">${node.data.headline || '3X Speed Boost • Google Cloud NVMe'}</div>
-                                            <div id="matrix-badge-tag-${node.id}" style="font-size:0.65rem; color:var(--sg-green);">${lang} • ${ratio} • ${palLabels[pal] || pal}</div>
+                                <div id="matrix-preview-wrap-${node.id}" style="position:relative; background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:8px; overflow:hidden; min-height:165px; display:flex; align-items:center; justify-content:center;">
+                                    ${node.data.is_generating ? `
+                                        <div style="position:absolute; inset:0; background:rgba(3,7,18,0.95); backdrop-filter:blur(8px); z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; text-align:center;">
+                                            <div style="width:34px; height:34px; border:3px solid rgba(0,168,143,0.2); border-top:3px solid var(--sg-green); border-radius:50%; animation:spin 0.8s linear infinite; margin-bottom:10px;"></div>
+                                            <div style="font-weight:800; font-size:0.85rem; color:#ffffff; margin-bottom:3px;">⚡ Generating 50+ Multivariate Variations...</div>
+                                            <div style="font-size:0.72rem; color:var(--sg-teal); line-height:1.3; max-width:340px;">Synthesizing 4 Brand Palettes × 8 Multilingual Locales × 3 Core Aspect Ratios</div>
+                                            <div style="width:85%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; margin-top:10px; overflow:hidden;">
+                                                <div id="matrix-prog-bar-${node.id}" style="width:${node.data.progress_pct || 40}%; height:100%; background:linear-gradient(90deg, var(--sg-green), var(--sg-teal)); transition:width 0.4s ease;"></div>
+                                            </div>
+                                            <div id="matrix-prog-txt-${node.id}" style="font-size:0.65rem; color:var(--text-muted); margin-top:6px;">AI Generation in progress with Gemini Omni...</div>
                                         </div>
-                                        <span class="badge badge-teal" style="font-size:0.62rem;">96% ABCD</span>
-                                    </div>
+                                    ` : `
+                                        <img id="matrix-preview-img-${node.id}" 
+                                             src="${node.data.base_image || '/media/asset_supercacher_speed.png'}" 
+                                             onerror="this.onerror=null; this.src='/media/asset_supercacher_speed.png';" 
+                                             style="width:100%; height:${ratio === '9:16' ? '220px' : (ratio === '1:1' ? '180px' : '155px')}; object-fit:cover; transition:all 0.3s ease; ${pal === 'emerald' ? 'filter: brightness(0.85) contrast(1.25) hue-rotate(140deg) saturate(1.4);' : (pal === 'white' ? 'filter: brightness(1.15) contrast(1.08) saturate(0.85);' : (pal === 'cyan' ? 'filter: brightness(0.95) contrast(1.3) hue-rotate(185deg) saturate(1.35);' : 'filter: contrast(1.05) saturate(1.1);'))}">
+                                        
+                                        <!-- Live Simulated Overlay -->
+                                        <div id="matrix-preview-overlay-${node.id}" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); display:flex; justify-content:space-between; align-items:center;">
+                                            <div>
+                                                <div id="matrix-headline-${node.id}" style="font-weight:800; font-size:0.75rem; color:#fff;">${node.data.headline || '3X Speed Boost • Google Cloud NVMe'}</div>
+                                                <div id="matrix-badge-tag-${node.id}" style="font-size:0.65rem; color:var(--sg-green);">${lang} • ${ratio} • ${palLabels[pal] || pal}</div>
+                                            </div>
+                                            <span class="badge badge-teal" style="font-size:0.62rem;">96% ABCD</span>
+                                        </div>
+                                    `}
                                 </div>
 
                                 <!-- Bulk Action Buttons -->
@@ -5222,6 +5234,7 @@
 
         async function switchProject(projId) {
             activeProjectId = projId;
+            cachedLibraryData = null; // Clear asset library cache: 0 cross-project caching
             try {
                 const res = await fetch(`/api/studio/projects/${projId}`);
                 const data = await res.json();
@@ -5241,7 +5254,20 @@
                     renderProjectSegments(p.segments || []);
                     renderProjectReadyVideos(p.ready_videos || []);
 
-                    console.log(`Switched to active workspace: ${p.name}`);
+                    // 4. Reset workbench launcher with project-specific brief defaults
+                    const launcherNode = canvasNodes.find(n => n.id === 'launcher_node');
+                    if (launcherNode) {
+                        launcherNode.data.feature = p.feature || 'SiteGround 3X SuperCacher Speed Boost';
+                        launcherNode.data.audience = p.target_audience || 'WooCommerce Merchants';
+                    }
+
+                    // If switching to a new project with 0 pre-generated scripts, clear generated canvas nodes
+                    if (!p.scripts || p.scripts.length === 0) {
+                        canvasNodes = canvasNodes.filter(n => n.id === 'launcher_node');
+                    }
+                    renderCanvasNodes();
+
+                    console.log(`Switched to active workspace: ${p.name} (0 cross-project caching)`);
                 }
             } catch(e) {
                 console.error("Error switching project:", e);
@@ -5957,6 +5983,7 @@
         function spawnMatrixForNarrative(narId) {
             const nar = canvasNodes.find(n => n.id === narId);
             const matrixId = `matrix_${Date.now()}`;
+            const activeProj = document.getElementById('project-select')?.value || activeProjectId || 'proj_wp_speed';
             
             // Find if there is a child image card created from this narrative
             const childImg = canvasNodes.find(n => n.type === 'image' && (n.parentIds || []).includes(narId));
@@ -5983,6 +6010,8 @@
                     active_ratio: '16:9',
                     prompt: promptVal,
                     headline: promptVal,
+                    is_generating: true,
+                    progress_pct: 35,
                     paletteImages: {
                         'green': baseImg,
                         'emerald': baseImg,
@@ -5998,17 +6027,26 @@
 
             appendBotChatMessage(`
                 <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">⚡ 50+ Multivariate Creative Expansion Matrix</div>
-                <p style="margin:4px 0 0 0; font-size:0.8rem;">Spawned single matrix card for 4 Palettes × 8 Languages × 3 Aspect Ratios from Narrative.</p>
+                <p style="margin:4px 0 0 0; font-size:0.8rem;">Generating 50+ Multivariate Variations (4 Palettes × 8 Locales × 3 Aspect Ratios) for <b>${escapeHtml(promptVal)}</b>...</p>
             `);
+
+            let prog = 35;
+            const pInterval = setInterval(() => {
+                prog = Math.min(prog + 15, 88);
+                const bar = document.getElementById(`matrix-prog-bar-${matrixId}`);
+                if (bar) bar.style.width = `${prog}%`;
+            }, 350);
 
             fetch('/api/studio/images/variations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image_url: baseImg, prompt_text: promptVal })
+                body: JSON.stringify({ image_url: baseImg, prompt_text: promptVal, project_id: activeProj })
             }).then(res => res.json()).then(data => {
-                if (data.status === 'success' && data.variations && data.variations.length >= 4) {
-                    const mNode = canvasNodes.find(n => n.id === matrixId);
-                    if (mNode) {
+                clearInterval(pInterval);
+                const mNode = canvasNodes.find(n => n.id === matrixId);
+                if (mNode) {
+                    mNode.data.is_generating = false;
+                    if (data.status === 'success' && data.variations && data.variations.length >= 4) {
                         mNode.data.paletteImages = {
                             'green': data.variations[0].image_url,
                             'emerald': data.variations[1].image_url,
@@ -6016,15 +6054,24 @@
                             'cyan': data.variations[2].image_url
                         };
                         mNode.data.base_image = mNode.data.paletteImages[mNode.data.active_palette || 'green'];
-                        renderCanvasNodes();
                     }
+                    renderCanvasNodes();
                 }
-            }).catch(e => console.error("Matrix variations error:", e));
+            }).catch(e => {
+                clearInterval(pInterval);
+                console.error("Matrix variations error:", e);
+                const mNode = canvasNodes.find(n => n.id === matrixId);
+                if (mNode) {
+                    mNode.data.is_generating = false;
+                    renderCanvasNodes();
+                }
+            });
         }
 
         function spawnMatrixForImageNode(imgId) {
             const imgNode = canvasNodes.find(n => n.id === imgId);
             const matrixId = `matrix_${Date.now()}`;
+            const activeProj = document.getElementById('project-select')?.value || activeProjectId || 'proj_wp_speed';
             const baseImg = imgNode ? imgNode.data.file_path : '/media/asset_supercacher_speed.png';
             const promptVal = imgNode ? imgNode.data.prompt : 'SiteGround 3X Speed Boost Campaign';
             
@@ -6047,6 +6094,8 @@
                     active_ratio: '16:9',
                     prompt: promptVal,
                     headline: promptVal,
+                    is_generating: true,
+                    progress_pct: 35,
                     paletteImages: {
                         'green': baseImg,
                         'emerald': baseImg,
@@ -6060,14 +6109,23 @@
                 setTimeout(() => focusNode(matrixId), 50);
             }
 
+            let prog = 35;
+            const pInterval = setInterval(() => {
+                prog = Math.min(prog + 15, 88);
+                const bar = document.getElementById(`matrix-prog-bar-${matrixId}`);
+                if (bar) bar.style.width = `${prog}%`;
+            }, 350);
+
             fetch('/api/studio/images/variations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image_url: baseImg, prompt_text: promptVal })
+                body: JSON.stringify({ image_url: baseImg, prompt_text: promptVal, project_id: activeProj })
             }).then(res => res.json()).then(data => {
-                if (data.status === 'success' && data.variations && data.variations.length >= 4) {
-                    const mNode = canvasNodes.find(n => n.id === matrixId);
-                    if (mNode) {
+                clearInterval(pInterval);
+                const mNode = canvasNodes.find(n => n.id === matrixId);
+                if (mNode) {
+                    mNode.data.is_generating = false;
+                    if (data.status === 'success' && data.variations && data.variations.length >= 4) {
                         mNode.data.paletteImages = {
                             'green': data.variations[0].image_url,
                             'emerald': data.variations[1].image_url,
@@ -6075,10 +6133,18 @@
                             'cyan': data.variations[2].image_url
                         };
                         mNode.data.base_image = mNode.data.paletteImages[mNode.data.active_palette || 'green'];
-                        renderCanvasNodes();
                     }
+                    renderCanvasNodes();
                 }
-            }).catch(e => console.error("Matrix variations error:", e));
+            }).catch(e => {
+                clearInterval(pInterval);
+                console.error("Matrix variations error:", e);
+                const mNode = canvasNodes.find(n => n.id === matrixId);
+                if (mNode) {
+                    mNode.data.is_generating = false;
+                    renderCanvasNodes();
+                }
+            });
         }
 
         function switchMatrixPalette(nodeId, pal, btnEl) {
