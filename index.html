@@ -6545,6 +6545,51 @@
             enterFocusMode(canvasNodes[prevIdx].id);
         }
 
+        function syncInspectorToNodeLive() {
+            if (!focusedNodeId) return;
+            const node = canvasNodes.find(n => n.id === focusedNodeId);
+            if (!node) return;
+
+            if (node.type === 'narrative') {
+                const hook = document.getElementById('insp-hook-text')?.value;
+                const trigger = document.getElementById('insp-hook-trigger')?.value;
+                const p = document.getElementById('insp-pas-p')?.value;
+                const s = document.getElementById('insp-pas-s')?.value;
+                const cta = document.getElementById('insp-pas-cta')?.value;
+
+                if (hook !== undefined) node.data.hook_text = hook;
+                if (!node.data.rawVariant) node.data.rawVariant = {};
+                if (!node.data.rawVariant.hook_breakdown) node.data.rawVariant.hook_breakdown = {};
+                if (hook !== undefined) node.data.rawVariant.hook_breakdown.hook_text = hook;
+                if (trigger !== undefined) node.data.rawVariant.hook_breakdown.emotional_trigger = trigger;
+                if (!node.data.rawVariant.hook_breakdown.pas_framework) node.data.rawVariant.hook_breakdown.pas_framework = {};
+                if (p !== undefined) node.data.rawVariant.hook_breakdown.pas_framework.problem = p;
+                if (s !== undefined) node.data.rawVariant.hook_breakdown.pas_framework.solution = s;
+                if (cta !== undefined) node.data.rawVariant.hook_breakdown.cta_text = cta;
+            } else if (node.type === 'image') {
+                const hl = document.getElementById('insp-headline')?.value;
+                const sub = document.getElementById('insp-subhead')?.value;
+                const cta = document.getElementById('insp-cta')?.value;
+                const prompt = document.getElementById('insp-img-prompt')?.value;
+
+                if (hl !== undefined) node.data.headline = hl;
+                if (sub !== undefined) node.data.subtitle = sub;
+                if (cta !== undefined) node.data.cta = cta;
+                if (prompt !== undefined) node.data.prompt = prompt;
+            } else if (node.type === 'audio') {
+                const script = document.getElementById('insp-audio-script')?.value;
+                if (script !== undefined) {
+                    node.data.ssml_parsed = script;
+                    node.data.prompt = script;
+                }
+            } else if (node.type === 'clip') {
+                const caption = document.getElementById('insp-video-caption')?.value;
+                if (caption !== undefined) node.data.prompt = caption;
+            }
+
+            renderCanvasNodes();
+        }
+
         function populateInspectorForNode(node) {
             const iconEl = document.getElementById('inspector-node-icon');
             const titleEl = document.getElementById('inspector-node-title');
@@ -6555,8 +6600,10 @@
             const currentVer = node.data?.version || (node.data?.versions ? `v${(node.data.currentVersionIdx || 0) + 1}` : 'v1');
             if (verTag) verTag.innerText = `Active Version: ${currentVer}`;
 
-            // Reset body
             bodyEl.innerHTML = '';
+
+            // In-Inspector Toast Container
+            bodyEl.innerHTML += `<div id="inspector-toast-wrap" style="min-height:0;"></div>`;
 
             // -------------------------------------------------------------
             // CASE 1: IMAGE ASSET NODE
@@ -6566,7 +6613,7 @@
                 if (titleEl) titleEl.innerText = 'Visual Banner Creative Suite';
                 if (subEl) subEl.innerText = 'Typography, Color Palettes, Inpainting & Multi-Format Outpainting';
 
-                bodyEl.innerHTML = `
+                bodyEl.innerHTML += `
                     <!-- 1. Live Preview Screen with Zoom / Inspection -->
                     <div style="background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:6px; position:relative; overflow:hidden;">
                         <img id="inspector-preview-img" src="${node.data.file_path}" style="width:100%; height:200px; object-fit:contain; border-radius:6px; background:#000;">
@@ -6575,46 +6622,50 @@
                         </div>
                     </div>
 
-                    <!-- 2. Direct Typography & Copywriting Tweaker -->
+                    <!-- 2. Direct Typography & Copywriting Tweaker (Live 2-Way Sync) -->
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
                         <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green); display:flex; justify-content:space-between;">
-                            <span>✍️ Typography & Text Layer Controls</span>
-                            <span style="font-size:0.65rem; color:var(--text-muted);">Real-time re-composite</span>
+                            <span>✍️ Typography Layer Controls</span>
+                            <span style="font-size:0.65rem; color:var(--text-muted);">🟢 Live 2-Way Sync</span>
                         </div>
                         <div>
                             <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Headline Text:</label>
-                            <input type="text" id="insp-headline" value="${escapeHtml(node.data.headline || 'SiteGround 3X Speed Boost')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                            <input type="text" id="insp-headline" value="${escapeHtml(node.data.headline || 'SiteGround 3X Speed Boost')}" oninput="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
                         </div>
                         <div>
                             <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Sub-Headline / Badge:</label>
-                            <input type="text" id="insp-subhead" value="${escapeHtml(node.data.subtitle || 'Ultra-Fast Google Cloud NVMe Storage')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                            <input type="text" id="insp-subhead" value="${escapeHtml(node.data.subtitle || 'Ultra-Fast Google Cloud NVMe Storage')}" oninput="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
                         </div>
                         <div>
                             <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Call To Action (Button Text):</label>
-                            <input type="text" id="insp-cta" value="${escapeHtml(node.data.cta || 'GET 80% OFF TODAY')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                            <input type="text" id="insp-cta" value="${escapeHtml(node.data.cta || 'GET 80% OFF TODAY')}" oninput="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">AI Creative Prompt:</label>
+                            <textarea id="insp-img-prompt" oninput="syncInspectorToNodeLive()" style="width:100%; height:55px; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.75rem; box-sizing:border-box;">${escapeHtml(node.data.prompt || '')}</textarea>
                         </div>
                     </div>
 
-                    <!-- 3. Brand Color Harmony & Atmospheric Glow -->
+                    <!-- 3. AI Generation Action Buttons -->
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <button class="btn-primary" style="width:100%; font-size:0.78rem; font-weight:700; background:linear-gradient(135deg,var(--sg-green),var(--sg-teal));" onclick="regeneratePictureNode('${node.id}')">
+                            ⚡ Re-Generate Banner (Gemini Copy + Graphic Engine)
+                        </button>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-secondary" style="flex:1; font-size:0.72rem; border-color:#8b5cf6; color:#c4b5fd;" onclick="triggerCardUpscale('${node.id}')">🔍 2X 4K Upscale</button>
+                            <button class="btn-secondary" style="flex:1; font-size:0.72rem; border-color:#ec4899; color:#f472b6;" onclick="openInpaintModal('${node.id}')">🖌️ Inpaint</button>
+                            <button class="btn-secondary" style="flex:1; font-size:0.72rem; border-color:var(--sg-teal); color:#38bdf8;" onclick="generateVideoFromImageNode('${node.id}')">🎬 8s Video</button>
+                        </div>
+                    </div>
+
+                    <!-- 4. Brand Color Harmony & Atmospheric Glow -->
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="font-size:0.75rem; font-weight:800; color:#38bdf8;">🎨 Color Harmony & Lighting Atmosphere</div>
+                        <div style="font-size:0.75rem; font-weight:800; color:#38bdf8;">🎨 Brand Color Atmosphere (Instant Reskin)</div>
                         <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px;">
                             <button type="button" class="topbar-btn" style="height:26px; font-size:0.68rem; padding:0 2px;" onclick="inspectorSetPalette('green')">🟢 Green</button>
                             <button type="button" class="topbar-btn" style="height:26px; font-size:0.68rem; padding:0 2px;" onclick="inspectorSetPalette('emerald')">🌊 Obsidian</button>
                             <button type="button" class="topbar-btn" style="height:26px; font-size:0.68rem; padding:0 2px;" onclick="inspectorSetPalette('white')">⚪ White</button>
                             <button type="button" class="topbar-btn" style="height:26px; font-size:0.68rem; padding:0 2px;" onclick="inspectorSetPalette('cyan')">⚡ Cyan</button>
-                        </div>
-                    </div>
-
-                    <!-- 4. Multi-Format Outpainting (5 Ratios) -->
-                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="font-size:0.75rem; font-weight:800; color:#c084fc;">📐 Multi-Ratio Outpainting (Gemini 3.1)</div>
-                        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:4px; text-align:center;">
-                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('16:9')">16:9</button>
-                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('9:16')">9:16</button>
-                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('1:1')">1:1</button>
-                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('4:1')">4:1</button>
-                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('1.91:1')">1.91:1</button>
                         </div>
                     </div>
                 `;
@@ -6629,7 +6680,7 @@
 
                 const scriptVal = node.data.ssml_parsed || node.data.prompt || 'Switch to SiteGround today for 3X faster Google Cloud hosting infrastructure!';
 
-                bodyEl.innerHTML = `
+                bodyEl.innerHTML += `
                     <!-- 1. Live Audio Player Stream -->
                     <div style="background:rgba(3,7,18,0.95); border:1px solid rgba(168,85,247,0.3); border-radius:10px; padding:12px;">
                         <audio id="inspector-audio-player" src="${node.data.audio_url}" controls style="width:100%; border-radius:6px;"></audio>
@@ -6638,33 +6689,29 @@
                     <!-- 2. SSML Script Editor & Quick Insert Buttons -->
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="font-size:0.75rem; font-weight:800; color:#c084fc;">🎙️ Script & SSML Editor:</label>
+                            <label style="font-size:0.75rem; font-weight:800; color:#c084fc;">🎙️ Script & SSML Editor (Live Sync):</label>
                             <div style="display:flex; gap:3px;">
                                 <button type="button" class="fab-btn fab-btn-secondary" style="height:20px; font-size:0.62rem; padding:0 5px;" onclick="inspectorInsertSSML('<break time=\"500ms\"/>')">+ Break</button>
                                 <button type="button" class="fab-btn fab-btn-secondary" style="height:20px; font-size:0.62rem; padding:0 5px;" onclick="inspectorInsertSSML('<emphasis level=\"strong\">')">+ Emphasize</button>
                             </div>
                         </div>
-                        <textarea id="insp-audio-script" style="width:100%; height:90px; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:8px; font-size:0.78rem; font-family:'Outfit',sans-serif; box-sizing:border-box;">${escapeHtml(scriptVal)}</textarea>
+                        <textarea id="insp-audio-script" oninput="syncInspectorToNodeLive()" style="width:100%; height:90px; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:8px; font-size:0.78rem; font-family:'Outfit',sans-serif; box-sizing:border-box;">${escapeHtml(scriptVal)}</textarea>
                     </div>
 
-                    <!-- 3. Voice Persona & Speech Characteristics -->
+                    <!-- 3. Re-Synthesize Action Button -->
+                    <button class="btn-primary" style="width:100%; font-size:0.78rem; font-weight:700; background:linear-gradient(135deg,#a855f7,#7e22ce);" onclick="changeAudioCardLanguage('${node.id}', '${node.data.language || 'en-US'}')">
+                        🎙️ Re-Synthesize Voiceover (Google Cloud TTS HD)
+                    </button>
+
+                    <!-- 4. Voice Persona & Speech Characteristics -->
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">⚡ Voice Persona & Energy Preset</div>
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">⚡ Voice Persona Preset</div>
                         <select id="insp-voice-persona" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
                             <option value="en-US-Journey-F" selected>⚡ Energetic Growth Host (High Energy • High Conv)</option>
                             <option value="en-US-Standard-C">🛡️ Authoritative Cloud Engineer (Deep Technical Authority)</option>
                             <option value="en-US-Wavenet-D">💼 Calm Executive Consultant (B2B Precision)</option>
                             <option value="en-US-Journey-O">📖 Warm Storyteller (Authentic Brand Connection)</option>
                         </select>
-                    </div>
-
-                    <!-- 4. Speed & Pitch Sliders -->
-                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="display:flex; justify-content:space-between;">
-                            <span style="font-size:0.72rem; color:var(--text-sub); font-weight:700;">Speech Rate / Pacing:</span>
-                            <span id="insp-rate-val" style="font-size:0.72rem; color:var(--sg-green); font-weight:700;">1.05x (Optimal Ad Pacing)</span>
-                        </div>
-                        <input type="range" id="insp-audio-rate" min="0.8" max="1.3" step="0.05" value="1.05" oninput="document.getElementById('insp-rate-val').innerText = this.value + 'x'" style="width:100%;">
                     </div>
                 `;
             }
@@ -6676,28 +6723,22 @@
                 if (titleEl) titleEl.innerText = '8s Motion Video Clip Suite';
                 if (subEl) subEl.innerText = 'Veo 3.1 Dynamics, Pan Direction, Speed Easing & Typography Lower-Thirds';
 
-                bodyEl.innerHTML = `
+                bodyEl.innerHTML += `
                     <!-- 1. Live Video Player -->
                     <div style="background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:10px; overflow:hidden;">
                         <video id="inspector-video-player" src="${node.data.video_url || ''}" controls style="width:100%; height:200px; object-fit:contain; background:#000;"></video>
                     </div>
 
-                    <!-- 2. Motion Direction & Ken Burns Dynamics -->
+                    <!-- 2. Lower-Third Caption -->
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="font-size:0.75rem; font-weight:800; color:#38bdf8;">🎥 Camera Movement & Pan Dynamics</div>
-                        <select id="insp-motion-dir" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
-                            <option value="ken_burns_zoom_in" selected>🔍 Center Zoom In (1.00x ➔ 1.15x Smooth Easing)</option>
-                            <option value="pan_left_right">➡️ Dynamic Left-to-Right Panoramic Sweep</option>
-                            <option value="tilt_up">⬆️ Upward Tilt Over Performance Metrics</option>
-                            <option value="cinematic_drift">🌌 3D Cinematic Drift with Particle Glow</option>
-                        </select>
+                        <label style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">🏷️ Motion Prompt & Kinetic Caption:</label>
+                        <input type="text" id="insp-video-caption" value="${escapeHtml(node.data.prompt || 'SiteGround 3X SuperCacher Speed Boost')}" oninput="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
                     </div>
 
-                    <!-- 3. Subtitle / Lower-Third Overlay Banner -->
-                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-                        <label style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">🏷️ Lower-Third Subtitle & Kinetic Caption:</label>
-                        <input type="text" id="insp-video-caption" value="${escapeHtml(node.data.prompt || 'SiteGround 3X SuperCacher Speed Boost')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
-                    </div>
+                    <!-- 3. Re-render Action -->
+                    <button class="btn-primary" style="width:100%; font-size:0.78rem; font-weight:700; background:linear-gradient(135deg,#10b981,#059669);" onclick="inspectorReRenderVideo('${node.id}')">
+                        🎬 Re-Render Motion Video (Veo 3.1 & FFmpeg)
+                    </button>
                 `;
             }
             // -------------------------------------------------------------
@@ -6706,36 +6747,57 @@
             else if (node.type === 'narrative') {
                 if (iconEl) iconEl.innerText = '📝';
                 if (titleEl) titleEl.innerText = 'Strategic Narrative Hook Suite';
-                if (subEl) subEl.innerText = 'PAS Framework, Hook Text, Audience Objection & ABCD Video Scenes';
+                if (subEl) subEl.innerText = 'PAS Framework, Hook Text, Audience Objection & Live Generation';
 
                 const rawV = node.data.rawVariant || {};
                 const hookText = rawV.hook_breakdown?.hook_text || node.data.hook_text || 'Stop losing store sales due to slow server response times.';
 
-                bodyEl.innerHTML = `
+                bodyEl.innerHTML += `
+                    <!-- 1. Live Attention Hook Editor -->
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-                        <label style="font-size:0.75rem; font-weight:800; color:#38bdf8;">🎯 Attention Hook Text:</label>
-                        <textarea id="insp-hook-text" style="width:100%; height:75px; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:8px; font-size:0.78rem; font-family:'Outfit',sans-serif; box-sizing:border-box;">${escapeHtml(hookText)}</textarea>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="font-size:0.75rem; font-weight:800; color:#38bdf8;">🎯 Attention Hook Text:</label>
+                            <span style="font-size:0.65rem; color:var(--sg-green);">🟢 Live 2-Way Sync</span>
+                        </div>
+                        <textarea id="insp-hook-text" oninput="syncInspectorToNodeLive()" style="width:100%; height:75px; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:8px; font-size:0.78rem; font-family:'Outfit',sans-serif; box-sizing:border-box;">${escapeHtml(hookText)}</textarea>
                     </div>
 
+                    <!-- 2. AI Actions directly in Inspector -->
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <button class="btn-primary" id="btn-insp-regen-hook" style="width:100%; font-size:0.78rem; font-weight:700; background:linear-gradient(135deg,var(--sg-green),var(--sg-teal));" onclick="inspectorReSynthNarrative('${node.id}')">
+                            ✨ Re-Synthesize Hook with Gemini 3.7 Flash
+                        </button>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-secondary" style="flex:1; font-size:0.72rem; padding:6px 8px;" onclick="generateImagesForNarrativeNode('${node.id}')">🖼️ Generate Images</button>
+                            <button class="btn-secondary" style="flex:1; font-size:0.72rem; padding:6px 8px; border-color:var(--sg-teal); color:#38bdf8;" onclick="spawnMatrixForNarrative('${node.id}')">⚡ 50+ Matrix</button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Audience Psychological Trigger -->
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
                         <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">🧠 Audience Psychological Trigger</div>
-                        <select id="insp-hook-trigger" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
-                            <option value="loss_aversion" selected>🔴 Loss Aversion (Fear of lost sales & revenue at 2AM)</option>
-                            <option value="competitive_advantage">⚡ Competitive Velocity (Outranking slower competitors)</option>
-                            <option value="authority_trust">🛡️ Google Cloud Authority & 4.9 Trustpilot Rating</option>
-                            <option value="irresistible_deal">🏷️ 80% Off Promotional Blitz</option>
+                        <select id="insp-hook-trigger" onchange="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
+                            <option value="Loss Aversion & Panic over lost checkout revenue" ${rawV.hook_breakdown?.emotional_trigger?.includes('Loss') ? 'selected' : ''}>🔴 Loss Aversion (Fear of lost sales & checkout revenue)</option>
+                            <option value="Competitive Velocity & Performance Dominance" ${rawV.hook_breakdown?.emotional_trigger?.includes('Competitive') ? 'selected' : ''}>⚡ Competitive Velocity (Outranking slower competitors)</option>
+                            <option value="Enterprise Authority & 99.99% Uptime Guarantee" ${rawV.hook_breakdown?.emotional_trigger?.includes('Authority') ? 'selected' : ''}>🛡️ Google Cloud Authority & 4.9 Trustpilot Rating</option>
+                            <option value="Irresistible 80% Off Promotional Blitz" ${rawV.hook_breakdown?.emotional_trigger?.includes('Promo') || rawV.hook_breakdown?.emotional_trigger?.includes('80%') ? 'selected' : ''}>🏷️ 80% Off Promotional Blitz</option>
                         </select>
                     </div>
 
+                    <!-- 4. PAS Framework Breakdown -->
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:6px;">
-                        <div style="font-size:0.75rem; font-weight:800; color:#c084fc;">📋 PAS Framework Breakdown</div>
+                        <div style="font-size:0.75rem; font-weight:800; color:#c084fc;">📋 PAS Framework Breakdown (Live Sync)</div>
                         <div>
                             <span style="font-size:0.68rem; color:#fca5a5; font-weight:700;">Problem:</span>
-                            <input type="text" id="insp-pas-p" value="${escapeHtml(rawV.hook_breakdown?.pas_framework?.problem || '500 Server Errors during flash traffic spikes.')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:4px; padding:4px 6px; font-size:0.72rem; box-sizing:border-box;">
+                            <input type="text" id="insp-pas-p" value="${escapeHtml(rawV.hook_breakdown?.pas_framework?.problem || 'Slow server responses cause abandoned checkouts.')}" oninput="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:4px; padding:4px 6px; font-size:0.72rem; box-sizing:border-box;">
                         </div>
                         <div>
                             <span style="font-size:0.68rem; color:#fde047; font-weight:700;">Solution:</span>
-                            <input type="text" id="insp-pas-s" value="${escapeHtml(rawV.hook_breakdown?.pas_framework?.solution || 'SiteGround 190ms TTFB NVMe storage with 99.99% uptime.')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:4px; padding:4px 6px; font-size:0.72rem; box-sizing:border-box;">
+                            <input type="text" id="insp-pas-s" value="${escapeHtml(rawV.hook_breakdown?.pas_framework?.solution || 'SiteGround 190ms TTFB NVMe storage keeps store lightning fast.')}" oninput="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:4px; padding:4px 6px; font-size:0.72rem; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <span style="font-size:0.68rem; color:var(--sg-green); font-weight:700;">Direct CTA:</span>
+                            <input type="text" id="insp-pas-cta" value="${escapeHtml(rawV.hook_breakdown?.cta_text || 'Switch to 3X Faster Hosting Today')}" oninput="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:4px; padding:4px 6px; font-size:0.72rem; box-sizing:border-box;">
                         </div>
                     </div>
                 `;
@@ -6748,13 +6810,13 @@
                 if (titleEl) titleEl.innerText = '50+ Multivariate Matrix Explorer';
                 if (subEl) subEl.innerText = 'Deep Batch Exporter & PMax Asset Group Manager';
 
-                bodyEl.innerHTML = `
+                bodyEl.innerHTML += `
                     <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">🌐 Active Dimensions</div>
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">🌐 Active Multivariate Dimensions</div>
                         <div style="font-size:0.75rem; line-height:1.5; color:#fff;">
                             • <b>4 Palettes</b>: Signature Green, Deep Obsidian, Studio White, Cyber Cyan<br>
                             • <b>8 Locales</b>: US, ES, DE, FR, IT, BR, BG, JA<br>
-                            • <b>3 Formats</b>: 16:9 Desktop, 9:16 Shorts, 1:1 Social
+                            • <b>3 Formats</b>: 16:9 Desktop, 9:16 Shorts, 1:1 Social Feed
                         </div>
                     </div>
                     <button class="btn-primary" style="width:100%; font-weight:700; background:linear-gradient(135deg,var(--sg-green),var(--sg-teal));" onclick="bulkDeploy50Variations('${node.id}')">
@@ -6770,7 +6832,7 @@
                 if (titleEl) titleEl.innerText = 'Master Video Combiner & Stitcher';
                 if (subEl) subEl.innerText = 'Multi-Stream Timeline Synthesizer & PMax Deployment';
 
-                bodyEl.innerHTML = `
+                bodyEl.innerHTML += `
                     <div style="background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:10px; overflow:hidden;">
                         <video src="${node.data.video_url || ''}" controls style="width:100%; height:200px; object-fit:contain; background:#000;"></video>
                     </div>
@@ -6781,51 +6843,50 @@
             }
         }
 
-        function inspectorSetPalette(palKey) {
-            if (!focusedNodeId) return;
-            const node = canvasNodes.find(n => n.id === focusedNodeId);
-            if (node) {
-                if (node.type === 'expansion_matrix') {
-                    node.data.active_palette = palKey;
+        async function inspectorReSynthNarrative(nodeId) {
+            const btn = document.getElementById('btn-insp-regen-hook');
+            if (btn) btn.innerText = '⏳ Gemini 3.7 synthesizing...';
+            
+            const node = canvasNodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            try {
+                const res = await fetch('/api/studio/narratives/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        campaign_goal: node.data.hook_text || 'Win 20% EMEA market share with 3X NVMe speed boost',
+                        target_audience: 'WooCommerce Merchants',
+                        core_feature: '3X SuperCacher Speed Boost & NVMe Storage'
+                    })
+                });
+                const data = await res.json();
+                if (data && data.variants && data.variants.length > 0) {
+                    const fresh = data.variants[0];
+                    node.data.rawVariant = fresh;
+                    node.data.hook_text = fresh.hook_breakdown?.hook_text || node.data.hook_text;
                     renderCanvasNodes();
                     populateInspectorForNode(node);
-                } else if (node.type === 'image') {
-                    const palPrompts = {
-                        green: 'SiteGround brand signature emerald green with gold stars',
-                        emerald: 'Deep obsidian navy blue background with emerald glowing streaks',
-                        white: 'Clean crisp studio white background with bold typography',
-                        cyan: 'Cyberpunk high-contrast cyan with speed benchmarks'
-                    };
-                    quickReskinPalette(node.id, palPrompts[palKey] || palKey);
-                    setTimeout(() => {
-                        const updatedNode = canvasNodes.find(n => n.id === focusedNodeId);
-                        if (updatedNode) populateInspectorForNode(updatedNode);
-                    }, 500);
+                    
+                    const toast = document.getElementById('inspector-toast-wrap');
+                    if (toast) {
+                        toast.innerHTML = `<div style="background:rgba(16,185,129,0.25); border:1px solid var(--sg-green); color:var(--sg-green); font-size:0.75rem; font-weight:700; padding:6px 10px; border-radius:6px; text-align:center; margin-bottom:8px;">✨ Hook Re-Synthesized with Gemini 3.7 Flash!</div>`;
+                    }
                 }
+            } catch (err) {
+                console.error("Inspector Re-Synth Hook Error:", err);
+            } finally {
+                if (btn) btn.innerText = '✨ Re-Synthesize Hook with Gemini 3.7 Flash';
             }
         }
 
-        function inspectorSetRatio(ratio) {
-            if (!focusedNodeId) return;
-            const node = canvasNodes.find(n => n.id === focusedNodeId);
-            if (node) {
-                if (node.type === 'expansion_matrix') {
-                    node.data.active_ratio = ratio;
-                    renderCanvasNodes();
-                    populateInspectorForNode(node);
-                }
+        async function inspectorReRenderVideo(nodeId) {
+            const node = canvasNodes.find(n => n.id === nodeId);
+            if (!node) return;
+            const parentImg = canvasNodes.find(n => (node.parentIds || []).includes(n.id) && n.type === 'image') || canvasNodes.find(n => n.type === 'image');
+            if (parentImg) {
+                await generateVideoFromImageNode(parentImg.id);
             }
-        }
-
-        function inspectorInsertSSML(tag) {
-            const textarea = document.getElementById('insp-audio-script');
-            if (!textarea) return;
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const val = textarea.value;
-            textarea.value = val.substring(0, start) + tag + val.substring(end);
-            textarea.focus();
-            textarea.selectionStart = textarea.selectionEnd = start + tag.length;
         }
 
         function applyInspectorChanges() {
@@ -6834,28 +6895,7 @@
             if (!node) return;
 
             // 1. Gather modified fields based on node type
-            if (node.type === 'image') {
-                const hl = document.getElementById('insp-headline')?.value;
-                const sub = document.getElementById('insp-subhead')?.value;
-                const cta = document.getElementById('insp-cta')?.value;
-                if (hl) node.data.headline = hl;
-                if (sub) node.data.subtitle = sub;
-                if (cta) node.data.cta = cta;
-            } else if (node.type === 'audio') {
-                const scriptVal = document.getElementById('insp-audio-script')?.value;
-                if (scriptVal) node.data.ssml_parsed = scriptVal;
-            } else if (node.type === 'clip') {
-                const captionVal = document.getElementById('insp-video-caption')?.value;
-                if (captionVal) node.data.prompt = captionVal;
-            } else if (node.type === 'narrative') {
-                const hookVal = document.getElementById('insp-hook-text')?.value;
-                if (hookVal) {
-                    node.data.hook_text = hookVal;
-                    if (node.data.rawVariant && node.data.rawVariant.hook_breakdown) {
-                        node.data.rawVariant.hook_breakdown.hook_text = hookVal;
-                    }
-                }
-            }
+            syncInspectorToNodeLive();
 
             // 2. Fork New Version
             if (!node.data.versions) {
@@ -6866,7 +6906,7 @@
             node.data.versions.push({
                 ver: newVerTag,
                 url: node.data.file_path || node.data.video_url || '',
-                prompt: node.data.prompt || '',
+                prompt: node.data.prompt || node.data.hook_text || '',
                 timestamp: Date.now()
             });
             node.data.currentVersionIdx = node.data.versions.length - 1;
@@ -6875,7 +6915,15 @@
             renderCanvasNodes();
             populateInspectorForNode(node);
 
-            // Toast feedback
+            // In-Inspector Visual Toast Feedback Banner
+            const toast = document.getElementById('inspector-toast-wrap');
+            if (toast) {
+                toast.innerHTML = `<div style="background:rgba(16,185,129,0.25); border:1.5px solid var(--sg-green); color:var(--sg-green); font-size:0.78rem; font-weight:800; padding:8px 12px; border-radius:8px; text-align:center; margin-bottom:10px; box-shadow:0 0 16px rgba(16,185,129,0.4); animation:fadeIn 0.2s ease;">✨ Version ${newVerTag} Forked & Saved Successfully!</div>`;
+                setTimeout(() => {
+                    if (toast) toast.innerHTML = '';
+                }, 4000);
+            }
+
             appendBotChatMessage(`
                 <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">✨ Applied & Forked ${newVerTag}</div>
                 <p style="margin:4px 0 0 0; font-size:0.8rem;">Saved precision parameter changes to active card version.</p>
