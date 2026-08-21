@@ -1218,10 +1218,10 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            height: 38px;
-            padding: 0 16px;
-            border-radius: 10px;
-            font-size: 0.8rem;
+            height: 32px;
+            padding: 0 12px;
+            border-radius: 8px;
+            font-size: 0.76rem;
             font-weight: 600;
             font-family: 'Outfit', sans-serif;
             white-space: nowrap;
@@ -1229,6 +1229,95 @@
             transition: all 0.2s ease;
             box-sizing: border-box;
             line-height: 1;
+        }
+
+        /* Unified Sleek Top Studio Bar */
+        .studio-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 8px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            flex-shrink: 0;
+            gap: 12px;
+        }
+
+        .topbar-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .topbar-dock-pill {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(3, 7, 18, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 3px 6px;
+        }
+
+        .topbar-divider {
+            height: 18px;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+
+        .topbar-btn {
+            height: 32px;
+            padding: 0 12px;
+            border-radius: 7px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+        }
+        .topbar-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .topbar-btn-primary {
+            background: linear-gradient(135deg, var(--sg-green), var(--sg-teal));
+            border: 1px solid rgba(150, 203, 76, 0.4);
+            color: #030712;
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(150, 203, 76, 0.3);
+        }
+        .topbar-btn-primary:hover {
+            background: linear-gradient(135deg, #a3d95b, #00c4a7);
+            box-shadow: 0 4px 16px rgba(150, 203, 76, 0.5);
+            transform: translateY(-1px);
+        }
+        .topbar-btn-accent {
+            background: rgba(16, 185, 129, 0.18);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            color: #34d399;
+            font-weight: 700;
+        }
+        .topbar-btn-accent:hover {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: #34d399;
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
         }
 
         .fab-btn-secondary {
@@ -1299,61 +1388,83 @@
 <body>
     <div class="container">
         <!-- Ultra-Slim Unified Studio Header Bar (48px) -->
-        <header style="display:flex; justify-content:space-between; align-items:center; background:rgba(17, 24, 39, 0.9); backdrop-filter:blur(20px); border:1px solid rgba(255, 255, 255, 0.12); padding:6px 16px; border-radius:12px; margin-bottom:8px; box-shadow:var(--shadow-sm); flex-shrink:0;">
-            <!-- Brand & Project Switcher -->
-            <div style="display:flex; align-items:center; gap:12px;">
+        <header class="studio-topbar">
+            <!-- 1. LEFT GROUP: Brand Identity & Project Workspace Switcher -->
+            <div class="topbar-group">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <div class="logo-badge" style="width:34px; height:34px; font-size:1rem; border-radius:10px;">SG</div>
+                    <div class="logo-badge" style="width:32px; height:32px; font-size:0.95rem; border-radius:8px;">SG</div>
                     <span style="font-weight:800; font-size:0.92rem; color:#fff; white-space:nowrap;">SiteGround <span style="font-weight:400; opacity:0.85; color:var(--sg-green);">AI Studio</span></span>
                 </div>
                 
-                <div style="height:20px; width:1px; background:rgba(255,255,255,0.15);"></div>
+                <div class="topbar-divider"></div>
                 
-                <div style="display:flex; align-items:center; gap:6px; background:rgba(31, 41, 55, 0.6); padding:4px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                <!-- Project Dropdown Capsule -->
+                <div style="display:flex; align-items:center; gap:6px; background:rgba(3,7,18,0.7); padding:3px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); height:32px; box-sizing:border-box;">
                     <span style="font-size:0.75rem; font-weight:700; color:var(--sg-green);">📁 Project:</span>
-                    <select id="project-select" onchange="switchProject(this.value)" style="background:transparent; border:none; color:#ffffff; font-size:0.78rem; font-weight:600; cursor:pointer; outline:none;">
+                    <select id="project-select" onchange="switchProject(this.value)" style="background:transparent; border:none; color:#ffffff; font-size:0.78rem; font-weight:600; cursor:pointer; outline:none; max-width:240px;">
                         <option value="proj_wp_speed" style="background:#0f172a; color:#fff;">SiteGround Managed WordPress Speed Promo</option>
                         <option value="proj_cloud_247" style="background:#0f172a; color:#fff;">SiteGround Enterprise Cloud & 24/7 Support</option>
                     </select>
-                    <button class="btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="openNewProjectModal()">+ New</button>
-                </div>
-
-                <!-- Dedicated Assets Library & Upload Direct Access -->
-                <div style="display:flex; gap:6px;">
-                    <button class="btn-primary" style="padding:4px 10px; font-size:0.74rem; background:linear-gradient(135deg,#10b981,#059669);" onclick="openAssetsLibraryModal()" title="Open Centralized Assets Library & Media Storage">
-                        📚 Asset Library
-                    </button>
-                    <button class="btn-secondary" style="padding:4px 10px; font-size:0.74rem; border-color:var(--sg-teal); color:#38bdf8;" onclick="document.getElementById('global-asset-file-input').click()" title="Upload Image, Video (MP4) or Audio (MP3) files directly">
-                        📤 Upload
-                    </button>
-                    <input type="file" id="global-asset-file-input" multiple accept="image/*,video/*,audio/*" style="display:none;" onchange="handleGlobalAssetUpload(this.files)">
+                    <button class="topbar-btn" style="height:22px; padding:0 6px; font-size:0.68rem; background:rgba(255,255,255,0.08);" onclick="openNewProjectModal()">+ New</button>
                 </div>
             </div>
 
-            <!-- Modular Canvas Tool Dock (Magnific AI style) -->
-            <div style="display:flex; align-items:center; gap:5px; background:rgba(11,15,25,0.7); padding:3px 8px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-                <button class="fab-btn fab-btn-primary" style="height:30px; padding:0 10px; font-size:0.72rem;" onclick="spawnNewLauncherNode()">🚀 + Launcher</button>
-                <button class="fab-btn fab-btn-secondary" style="height:30px; padding:0 8px; font-size:0.72rem;" onclick="openCanvasActionPrompt('narratives')">💡 Narrative</button>
-                <button class="fab-btn fab-btn-secondary" style="height:30px; padding:0 8px; font-size:0.72rem;" onclick="openCanvasActionPrompt('images')">🖼️ Image</button>
-                <button class="fab-btn fab-btn-secondary" style="height:30px; padding:0 8px; font-size:0.72rem; border-color:#8b5cf6; color:#c4b5fd;" onclick="openCanvasActionPrompt('upscale')">🔍 Upscale</button>
-                <button class="fab-btn fab-btn-secondary" style="height:30px; padding:0 8px; font-size:0.72rem; border-color:#38bdf8; color:#38bdf8;" onclick="openCanvasActionPrompt('variations')">🔀 Variations</button>
-                <button class="fab-btn fab-btn-secondary" style="height:30px; padding:0 8px; font-size:0.72rem;" onclick="openCanvasActionPrompt('clip')">🎬 8s Video</button>
-                <button class="fab-btn fab-btn-secondary" style="height:30px; padding:0 8px; font-size:0.72rem;" onclick="openCanvasActionPrompt('audio')">🎙️ Audio</button>
-                <button class="fab-btn fab-btn-accent" style="height:30px; padding:0 10px; font-size:0.72rem;" onclick="openCanvasActionPrompt('stitch')">⚡ Combiner</button>
+            <!-- 2. CENTER GROUP: Cohesive Creative Canvas Tool Dock -->
+            <div class="topbar-dock-pill">
+                <!-- Asset Management -->
+                <button class="topbar-btn" onclick="openAssetsLibraryModal()" title="Open Centralized Assets Library & Media Storage">
+                    📚 Library
+                </button>
+                <button class="topbar-btn" onclick="document.getElementById('global-asset-file-input').click()" title="Upload Image, Video (MP4) or Audio (MP3)">
+                    📤 Upload
+                </button>
+                <input type="file" id="global-asset-file-input" multiple accept="image/*,video/*,audio/*" style="display:none;" onchange="handleGlobalAssetUpload(this.files)">
+
+                <div class="topbar-divider"></div>
+
+                <!-- Node Spawners in Natural Pipeline Order: Launcher -> Narrative -> Image -> Variations -> 8s Video -> Audio -> Combiner -->
+                <button class="topbar-btn topbar-btn-primary" onclick="spawnNewLauncherNode()" title="Spawn Campaign Project Board Launcher Node">
+                    🚀 + Launcher
+                </button>
+                <button class="topbar-btn" onclick="openCanvasActionPrompt('narratives')" title="Generate High-CTR Narrative Variants">
+                    💡 Narrative
+                </button>
+                <button class="topbar-btn" onclick="openCanvasActionPrompt('images')" title="Generate Fluid Glassmorphic Image Assets">
+                    🖼️ Image
+                </button>
+                <button class="topbar-btn" onclick="openCanvasActionPrompt('variations')" title="Generate 4-Way Creative Variations">
+                    🔀 Variations
+                </button>
+                <button class="topbar-btn" onclick="openCanvasActionPrompt('clip')" title="Produce 8s Motion Video Clip">
+                    🎬 8s Video
+                </button>
+                <button class="topbar-btn" onclick="openCanvasActionPrompt('audio')" title="Synthesize Multilingual Audio Narrations">
+                    🎙️ Audio
+                </button>
+
+                <div class="topbar-divider"></div>
+
+                <button class="topbar-btn topbar-btn-accent" onclick="openCanvasActionPrompt('stitch')" title="Master Video Combiner & Stitcher">
+                    ⚡ Combiner
+                </button>
             </div>
 
-            <!-- Right: Radar Mini-Map Toggle, Model Badge & Sidebar Toggle -->
-            <div style="display:flex; align-items:center; gap:8px;">
-                <button class="fab-btn fab-btn-secondary" id="btn-toggle-minimap" style="height:30px; padding:0 8px; font-size:0.72rem;" onclick="toggleCanvasMinimap()" title="Toggle Canvas Radar / Mini-Map">
+            <!-- 3. RIGHT GROUP: Canvas Viewport & Copilot Controls -->
+            <div class="topbar-group">
+                <button class="topbar-btn" id="btn-toggle-minimap" onclick="toggleCanvasMinimap()" title="Toggle Canvas Radar / Mini-Map">
                     🗺️ Radar
                 </button>
-                <button class="fab-btn fab-btn-secondary" style="height:30px; padding:0 8px; font-size:0.72rem;" onclick="resetCanvasView()" title="Fit View to 100%">
+                <button class="topbar-btn" onclick="resetCanvasView()" title="Fit View to 100%">
                     🔍 Reset
                 </button>
-                <div class="pill" style="padding:4px 8px; font-size:0.7rem;">
-                    <div class="dot"></div> Gemini 3.6 Flash & Veo 3.1
+                
+                <div class="topbar-divider"></div>
+
+                <div class="pill" style="height:32px; padding:0 10px; font-size:0.72rem; box-sizing:border-box; display:inline-flex; align-items:center; gap:6px; background:rgba(3,7,18,0.7); border:1px solid rgba(255,255,255,0.1);">
+                    <div class="dot" style="background:var(--sg-green); box-shadow:0 0 8px var(--sg-green);"></div> Gemini 2.5 Flash & Veo 3.1
                 </div>
-                <button class="fab-btn fab-btn-secondary" id="btn-toggle-sidebar" style="height:30px; padding:0 10px; font-size:0.72rem;" onclick="toggleCopilotSidebar()" title="Toggle Copilot Chat Sidebar">
+                
+                <button class="topbar-btn" id="btn-toggle-sidebar" onclick="toggleCopilotSidebar()" title="Toggle Copilot Chat Sidebar" style="background:rgba(56,189,248,0.12); border-color:rgba(56,189,248,0.3); color:#38bdf8;">
                     💬 Copilot
                 </button>
             </div>
