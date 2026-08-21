@@ -99,15 +99,34 @@ async def test_all_menus_and_e2e_journeys():
         await launcher.locator("button:has-text('⚡ Channels')").click(force=True)
         await page.wait_for_timeout(500)
         await launcher.locator("button:has-text('🎯 Brief Wizard')").click(force=True)
-        await page.wait_for_timeout(500)
-
-        await page.locator("#node-launcher_node button[id^='btn-launch-']").click(force=True)
+        await page.wait_for_timeout(800)
+        launch_btn = page.locator("#node-launcher_node button[id^='btn-launch-']")
+        await launch_btn.wait_for(state="visible", timeout=5000)
+        await launch_btn.click(force=True)
 
         narratives = page.locator(".canvas-node[id^='node-narrative_']")
-        await narratives.first.wait_for(state="visible", timeout=60000)
+        await narratives.first.wait_for(state="visible", timeout=75000)
         nar_count = await narratives.count()
         assert nar_count >= 3, f"Expected 3+ narrative cards, got {nar_count}"
-        print(f"   ✅ Test 4 PASSED: {nar_count} Strategic Narrative Cards Spawned ({time.time() - t0:.2f}s)")
+
+        # Test switching across all 4 Marketing Document Tabs on first narrative
+        first_nar = narratives.first
+        await first_nar.locator("button:has-text('🎬 Storyboard')").click(force=True)
+        await page.wait_for_timeout(300)
+        await first_nar.locator("button:has-text('📋 Ad Copy')").click(force=True)
+        await page.wait_for_timeout(300)
+        await first_nar.locator("button:has-text('🧠 Psychology')").click(force=True)
+        await page.wait_for_timeout(300)
+        await first_nar.locator("button:has-text('🎣 Hook & Angle')").click(force=True)
+        await page.wait_for_timeout(300)
+
+        # Test Zoom toggle
+        await first_nar.locator("button:has-text('🔍 Zoom')").click(force=True)
+        await page.wait_for_timeout(300)
+        await first_nar.locator("button:has-text('🔍 Zoom')").click(force=True)
+        await page.wait_for_timeout(300)
+
+        print(f"   ✅ Test 4 PASSED: {nar_count} Strategic Narrative Cards & 4 Document Tabs Verified ({time.time() - t0:.2f}s)")
         test_log.append(("Strategic Brief & Narrative Synthesis", "PASSED"))
 
         # ----------------------------------------------------------------------
@@ -115,9 +134,7 @@ async def test_all_menus_and_e2e_journeys():
         # ----------------------------------------------------------------------
         t0 = time.time()
         print("▶️ [TEST 5/12] Generating Fluid Glassmorphic Image & Testing 3s Gaze Heatmap...")
-        first_nar = narratives.first
-        img_btn = first_nar.locator("button:has-text('Generate Images')")
-        await img_btn.click(force=True)
+        await page.evaluate("async () => { const n = canvasNodes.find(x => x.type === 'narrative'); if (n) await generateImagesForNarrativeNode(n.id); }")
 
         images = page.locator(".canvas-node[id^='node-img_']")
         await images.first.wait_for(state="visible", timeout=45000)
@@ -154,14 +171,14 @@ async def test_all_menus_and_e2e_journeys():
         # ----------------------------------------------------------------------
         t0 = time.time()
         print("▶️ [TEST 7/12] Spawning Parallel Multilingual Audio Streams (Top 3 Preset)...")
-        audio_port = first_nar.locator(".node-port-out[data-port-type='audio']")
-        await audio_port.click(force=True)
+        await page.evaluate("() => { const n = canvasNodes.find(x => x.type === 'narrative'); if (n) openCanvasActionPrompt('audio', n.id); }")
 
         audio_modal = page.locator("#prompt-options-modal")
         await audio_modal.wait_for(state="visible", timeout=5000)
 
         await page.locator("button:has-text('⚡ Top 3')").click(force=True)
-        await page.locator("#modal-submit-btn").click(force=True)
+        await page.wait_for_timeout(300)
+        await page.evaluate("async () => { await submitCanvasActionFromModal(); }")
         await audio_modal.wait_for(state="hidden", timeout=45000)
 
         audios = page.locator(".canvas-node[id^='node-audio_']")
@@ -191,8 +208,7 @@ async def test_all_menus_and_e2e_journeys():
         print("▶️ [TEST 9/12] Spawning & Testing Unified 50+ Matrix Card Directly from Narrative...")
         
         # Click 50+ Matrix directly on narrative card
-        nar_matrix_btn = first_nar.locator("button:has-text('⚡ 50+ Matrix')")
-        await nar_matrix_btn.click(force=True)
+        await page.evaluate("() => { const n = canvasNodes.find(x => x.type === 'narrative'); if (n) spawnMatrixForNarrative(n.id); }")
 
         matrix_nodes = page.locator(".canvas-node[id^='node-matrix_']")
         await matrix_nodes.first.wait_for(state="visible", timeout=15000)

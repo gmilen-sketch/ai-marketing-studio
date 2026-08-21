@@ -298,44 +298,85 @@ async def generate_scripts(request: Request):
     duration = body.get("duration", 15)
 
     prompt = f"""
-    You are an expert Performance Marketing Creative Director for Cloud Hosting (SiteGround).
-    Generate 3 DISTINCT, HIGH-CONVERTING {duration}-second ad script variants using GOOGLE'S OFFICIAL ABCD CREATIVE FRAMEWORK:
-    - [A] ATTENTION: Hook the viewer immediately (0-3s) with a high-impact problem/visual hook.
-    - [B] BRANDING: Introduce SiteGround branding early (within 5s) with official #96CB4C green logo and identity.
-    - [C] CONNECTION: Connect emotionally and logically with clear product value propositions ({product_feature}).
-    - [D] DIRECTION: End with a compelling, direct Call-To-Action (CTA) for {target_audience}.
+    You are an elite Performance Marketing Creative Director & Copywriting Strategist for Cloud Hosting (SiteGround).
+    Generate 3 COMPREHENSIVE, HIGH-CONVERTING {duration}-second ad narrative document variants using GOOGLE'S OFFICIAL ABCD CREATIVE FRAMEWORK and modern Direct Response Copywriting.
 
-    Tailor the scripts specifically for:
+    Tailor each document specifically for:
     - Product Feature: {product_feature}
     - Target Audience: {target_audience}
-    - Top Historical Hooks to Emulate: {json.dumps(winning_hooks)}
+    - Top Winning Hooks: {json.dumps(winning_hooks)}
 
     Output ONLY valid JSON matching this exact schema:
     {{
       "variants": [
         {{
           "variant_id": "variant_1",
-          "title": "Variant 1: High CTR Shock-Factor Hook (Google ABCD)",
+          "title": "Variant 1: Shock-Factor Revenue Defense (Google ABCD)",
           "hook_type": "Shock-Factor",
           "predicted_ctr": "8.8%",
-          "abcd_framework_breakdown": {{
-            "attention": "0-3s Hook",
-            "branding": "0-5s SiteGround Logo Ingestion",
-            "connection": "Value Prop Explanation",
-            "direction": "Final CTA"
+          "conv_rate": "14.2%",
+          "hook_breakdown": {{
+            "hook_text": "500 Server Error at 2AM? Your WooCommerce checkout just went down.",
+            "emotional_trigger": "Loss Aversion & Panic over lost store revenue",
+            "pas_framework": {{
+              "problem": "Traffic spikes overwhelm legacy shared servers causing checkout 500 errors.",
+              "agitation": "Shoppers abandon their carts and buy from competitors while you sleep.",
+              "solution": "SiteGround Google Cloud infrastructure + 3X SuperCacher guarantees 99.99% uptime."
+            }},
+            "cta_text": "Claim 80% Off SiteGround Managed Cloud"
+          }},
+          "ad_copy_pack": {{
+            "headlines": ["Stop Losing Store Sales", "3X Faster WooCommerce", "99.99% Uptime Guarantee"],
+            "primary_texts": [
+              "Is your slow hosting killing sales? Switch to SiteGround Google Cloud servers with 3X SuperCacher acceleration.",
+              "Get instant 24/7 expert support and ultra-fast NVMe storage. Free 1-click migration included!"
+            ],
+            "descriptions": [
+              "Rated 4.9/5 on Trustpilot. Up to 80% off Managed WordPress plans with free SSL & staging.",
+              "Experience 190ms TTFB and zero checkout downtime with Google Cloud infrastructure."
+            ],
+            "landing_page_hero": {{
+              "headline": "Stop Fixing Crashes. Start Scaling Sales.",
+              "subheadline": "Ultra-reliable Managed WordPress hosting backed by Google Cloud & 24/7 live experts."
+            }}
+          }},
+          "audience_psychology": {{
+            "target_persona": "High-Growth WooCommerce Store Owners ($10k-$100k/mo GMV)",
+            "core_objection": "Will switching hosts break my store or cause database loss?",
+            "counter_argument": "Zero-downtime automated migrator + expert engineers monitor your switch live for free.",
+            "cognitive_bias": "Loss Aversion & Authority Bias (Google Cloud Partner & 4.9/5 Trustpilot Rating)"
           }},
           "scenes": [
             {{
               "time_start": 0,
               "time_end": 3,
               "abcd_phase": "A - Attention",
-              "visual_description": "Descriptive visual scene",
+              "visual_description": "Frustrated store owner staring at 500 error screen on laptop at midnight",
               "ui_overlay_asset": "asset_500_error_badge.png",
-              "voiceover_ssml": "<speak>SSML voiceover text</speak>",
-              "kinetic_text": "DYNAMIC CTA OVERLAY"
+              "voiceover_ssml": "<speak>500 Server Error at 2AM? Your checkout just went down.</speak>",
+              "kinetic_text": "STOP LOSING SALES"
+            }},
+            {{
+              "time_start": 3,
+              "time_end": 7,
+              "abcd_phase": "B - Branding & C - Connection",
+              "visual_description": "SiteGround green logo ingests with 3X SuperCacher NVMe speed gauge",
+              "ui_overlay_asset": "asset_supercacher_speed.png",
+              "voiceover_ssml": "<speak>Switch to SiteGround for 3X faster Google Cloud infrastructure!</speak>",
+              "kinetic_text": "3X FASTER NVMe"
+            }},
+            {{
+              "time_start": 7,
+              "time_end": 15,
+              "abcd_phase": "D - Direction",
+              "visual_description": "Site Tools dashboard showing 1-click staging, free migration & 80% Off promo",
+              "ui_overlay_asset": "asset_discount_80_promo.png",
+              "voiceover_ssml": "<speak>Get up to 80% off today. Click below to launch risk-free!</speak>",
+              "kinetic_text": "GET 80% OFF TODAY"
             }}
           ]
         }}
+      ]
     }}
     """
     from fastapi.concurrency import run_in_threadpool
@@ -359,53 +400,87 @@ async def generate_scripts(request: Request):
                 ),
             )
 
+    import asyncio
+
     try:
-        response = await run_in_threadpool(_call_gemini_scripts)
+        response = await asyncio.wait_for(run_in_threadpool(_call_gemini_scripts), timeout=12.0)
         data = json.loads(response.text)
         if data and "variants" in data and len(data["variants"]) > 0:
-            print("Successfully generated scripts using Gemini 3.7 Flash in parallel thread")
+            print("Successfully generated rich narrative documents using Gemini 3.7 Flash")
             project_id = body.get("project_id")
             if project_id and project_id in PROJECTS_STORE:
                 PROJECTS_STORE[project_id]["scripts"] = data["variants"]
             return {"status": "success", "variants": data["variants"]}
     except Exception as e:
-        print(f"Gemini script generation fallback: {e}")
+        print(f"Gemini script generation fallback (timeout/error): {e}")
 
-    # Fallback schema with 3 distinct feature-tailored variants
+    # Fallback schema with 3 rich marketing narrative documents
     feature = product_feature
     audience = target_audience
 
     variants_res = [
         {
             "variant_id": "variant_1",
-            "title": f"Variant 1: Shock-Factor {feature} Hook",
+            "title": f"Variant 1: Shock-Factor {feature} Defense",
             "hook_type": "Shock-Factor",
             "predicted_ctr": "8.8%",
+            "conv_rate": "14.2%",
+            "hook_breakdown": {
+                "hook_text": f"500 Server Error at 2AM? Stop losing sales with {feature}.",
+                "emotional_trigger": "Loss Aversion & Panic over lost checkout revenue",
+                "pas_framework": {
+                    "problem": f"Slow server responses cause abandoned checkouts on {feature}.",
+                    "agitation": "Every 1-second delay slashes conversion rate by 7%.",
+                    "solution": f"SiteGround 190ms TTFB NVMe storage keeps your store lightning fast."
+                },
+                "cta_text": "Switch to 3X Faster Hosting Today"
+            },
+            "ad_copy_pack": {
+                "headlines": [f"Stop Losing Sales with {feature}", "3X Faster WooCommerce", "190ms TTFB Guarantee"],
+                "primary_texts": [
+                    f"Is your slow hosting killing store sales? Upgrade to SiteGround {feature} powered by Google Cloud infrastructure.",
+                    "Rated 4.9/5 stars on Trustpilot. Free 1-click site migration and 24/7 expert support included!"
+                ],
+                "descriptions": [
+                    f"Experience up to 80% off Managed WordPress hosting with {feature} & daily backups.",
+                    "Zero downtime migration. Risk-free 30-day money-back guarantee."
+                ],
+                "landing_page_hero": {
+                    "headline": "Stop Fixing Crashes. Start Scaling Sales.",
+                    "subheadline": f"Ultra-reliable Managed WordPress hosting with {feature} and 24/7 technical experts."
+                }
+            },
+            "audience_psychology": {
+                "target_persona": f"{audience} ($10k-$100k/mo GMV)",
+                "core_objection": "Will migrating to a new host cause downtime or lose orders?",
+                "counter_argument": "Free automated migrator tool + 24/7 technical team live migration guarantee.",
+                "cognitive_bias": "Loss Aversion & Authority Bias (Google Cloud Partner & 4.9 Trustpilot)"
+            },
             "scenes": [
                 {
                     "time_start": 0,
                     "time_end": 3,
-                    "visual_description": f"Frustrated store owner staring at 500 Server Error while attempting checkout",
-                    "ui_overlay_asset": "asset_supercacher_speed.png",
-                    "asset_file": "asset_supercacher_speed.png",
+                    "abcd_phase": "A - Attention",
+                    "visual_description": "Frustrated store owner staring at 500 error screen on laptop at midnight",
+                    "ui_overlay_asset": "asset_500_error_badge.png",
                     "voiceover_ssml": f"<speak>Stop losing sales! Switch to SiteGround {feature} today.</speak>",
                     "kinetic_text": "STOP LOSING SALES",
                 },
                 {
                     "time_start": 3,
                     "time_end": 7,
+                    "abcd_phase": "B - Branding & C - Connection",
                     "visual_description": f"{feature} graphic + instant 0.4s speed gauge benchmark",
                     "ui_overlay_asset": "asset_supercacher_speed.png",
-                    "asset_file": "asset_supercacher_speed.png",
                     "voiceover_ssml": f"<speak>Accelerate your WordPress site 3X faster with SiteGround!</speak>",
                     "kinetic_text": "3X FASTER SPEED",
                 },
                 {
                     "time_start": 7,
                     "time_end": 15,
+                    "abcd_phase": "D - Direction",
                     "visual_description": "Site Tools dashboard showing 1-click staging & 80% Off promo",
                     "ui_overlay_asset": "asset_discount_80_promo.png",
-                    "asset_file": "asset_discount_80_promo.png",
                     "voiceover_ssml": "<speak>Get up to 80% off today. Click below to launch!</speak>",
                     "kinetic_text": "GET 80% OFF TODAY",
                 },
@@ -416,22 +491,54 @@ async def generate_scripts(request: Request):
             "title": f"Variant 2: Speed Benchmark & {feature} Proof",
             "hook_type": "Data-Proof",
             "predicted_ctr": "8.4%",
+            "conv_rate": "13.8%",
+            "hook_breakdown": {
+                "hook_text": f"Side-by-side benchmark: {feature} cuts load times by 70%.",
+                "emotional_trigger": "Desire for high performance & technical superiority",
+                "pas_framework": {
+                    "problem": "Generic shared hosting averages 1,280ms TTFB causing sluggish admin dashboard.",
+                    "agitation": "Slow backend response wastes hours of management time every week.",
+                    "solution": "SiteGround NGINX Direct Delivery delivers pages in 0.4s flat."
+                },
+                "cta_text": "Test Your Site Speed on SiteGround"
+            },
+            "ad_copy_pack": {
+                "headlines": ["190ms TTFB Benchmark", f"70% Faster with {feature}", "Google Cloud Powered"],
+                "primary_texts": [
+                    f"See why over 3 million domains trust SiteGround for {feature} and Google Cloud infrastructure.",
+                    "Blazing fast NVMe storage, custom PHP optimizations, and built-in caching out of the box."
+                ],
+                "descriptions": [
+                    "Benchmark proven: 70% faster page loads than standard shared hosting.",
+                    "Free SSL, free daily backups, and 24/7 expert chat support."
+                ],
+                "landing_page_hero": {
+                    "headline": "Engineered for Extreme WordPress Speed.",
+                    "subheadline": f"Leverage Google Cloud servers, NVMe SSDs, and {feature} for maximum Core Web Vitals."
+                }
+            },
+            "audience_psychology": {
+                "target_persona": "WordPress Agencies & Web Developers Managing Client Sites",
+                "core_objection": "Is SiteGround really faster than generic VPS or cloud droplets?",
+                "counter_argument": "Independent benchmarks prove 190ms TTFB with custom PHP acceleration and NGINX edge.",
+                "cognitive_bias": "Empirical Proof & Social Proof (3 Million+ Domains Hosted)"
+            },
             "scenes": [
                 {
                     "time_start": 0,
                     "time_end": 5,
+                    "abcd_phase": "A - Attention",
                     "visual_description": f"Side-by-side speed test: SiteGround {feature} vs standard hosting",
                     "ui_overlay_asset": "asset_supercacher_speed.png",
-                    "asset_file": "asset_supercacher_speed.png",
                     "voiceover_ssml": f"<speak>See how {feature} cuts load times by 70% in real-time tests.</speak>",
                     "kinetic_text": "70% FASTER LOADS",
                 },
                 {
                     "time_start": 5,
                     "time_end": 15,
+                    "abcd_phase": "B - Branding & D - Direction",
                     "visual_description": "Site Tools interface showing 1-click NGINX Direct Delivery & SSL",
                     "ui_overlay_asset": "asset_trustpilot_support.png",
-                    "asset_file": "asset_trustpilot_support.png",
                     "voiceover_ssml": "<speak>Power your site with Google Cloud infrastructure and 24/7 support.</speak>",
                     "kinetic_text": "GOOGLE CLOUD POWERED",
                 },
@@ -442,22 +549,54 @@ async def generate_scripts(request: Request):
             "title": f"Variant 3: Limited-Time 80% Off Deal + {feature}",
             "hook_type": "Urgency-Offer",
             "predicted_ctr": "8.0%",
+            "conv_rate": "15.1%",
+            "hook_breakdown": {
+                "hook_text": f"Limited Time Promo: Get 80% Off Managed WordPress with {feature}!",
+                "emotional_trigger": "Urgency & Bargain Satisfaction (Fear of Missing Out)",
+                "pas_framework": {
+                    "problem": "Premium cloud hosting is usually priced at $30-$50/month.",
+                    "agitation": "Paying high monthly fees cuts into store profit margins.",
+                    "solution": "SiteGround promotional pricing gives enterprise cloud power from just $2.99/mo."
+                },
+                "cta_text": "Claim 80% Discount Before Offer Expires"
+            },
+            "ad_copy_pack": {
+                "headlines": ["80% Off Managed WordPress", "Plans from $2.99/mo", "Free Domain & Migration"],
+                "primary_texts": [
+                    f"Get industry-leading Managed WordPress hosting with {feature} at an exclusive 80% discount.",
+                    "Includes free 1-click staging, free automated email, SSL, and 30-day money-back guarantee."
+                ],
+                "descriptions": [
+                    "Special flash promotion for new accounts. Lock in 80% savings today.",
+                    "Join over 3,000,000 domains powered by SiteGround premium hosting."
+                ],
+                "landing_page_hero": {
+                    "headline": "Enterprise WordPress Hosting. 80% Off Today.",
+                    "subheadline": f"Get Google Cloud speed, {feature}, and 24/7 expert support starting at just $2.99/mo."
+                }
+            },
+            "audience_psychology": {
+                "target_persona": "Budget-Conscious SMBs, Bloggers & E-commerce Startups",
+                "core_objection": "Is this a stripped-down cheap plan with hidden limitations?",
+                "counter_argument": "Full enterprise feature set: unmetered traffic, free CDN, automated backups, and 30-day money back.",
+                "cognitive_bias": "Hyperbolic Discounting & Risk Reversal (80% Off + 30-Day Guarantee)"
+            },
             "scenes": [
                 {
                     "time_start": 0,
                     "time_end": 4,
+                    "abcd_phase": "A - Attention",
                     "visual_description": "Glowing 80% Off badge animation with SiteGround green branding",
                     "ui_overlay_asset": "asset_discount_80_promo.png",
-                    "asset_file": "asset_discount_80_promo.png",
                     "voiceover_ssml": f"<speak>Limited time offer! Get Managed WordPress with {feature} at 80% off!</speak>",
                     "kinetic_text": "SAVE 80% TODAY",
                 },
                 {
                     "time_start": 4,
                     "time_end": 15,
+                    "abcd_phase": "B - Branding & D - Direction",
                     "visual_description": "Instant 1-click free migration tool demo & 30-day money back guarantee",
                     "ui_overlay_asset": "asset_trustpilot_support.png",
-                    "asset_file": "asset_trustpilot_support.png",
                     "voiceover_ssml": "<speak>Free 1-click site migration included. Risk-free for 30 days!</speak>",
                     "kinetic_text": "FREE SITE MIGRATION",
                 },

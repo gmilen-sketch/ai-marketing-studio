@@ -2109,29 +2109,143 @@
                         </div>
                     `;
                 } else if (node.type === 'narrative') {
+                    const narTab = node.data.activeTab || 'hook';
+                    const rawV = node.data.rawVariant || {};
+                    const hookBd = rawV.hook_breakdown || {
+                        hook_text: node.data.hook_text || 'Stop losing sales due to slow server response times.',
+                        emotional_trigger: 'Loss Aversion & Panic over lost checkout revenue',
+                        pas_framework: {
+                            problem: 'Traffic spikes overwhelm legacy shared servers causing checkout 500 errors.',
+                            agitation: 'Every 1-second delay slashes conversion rate by 7%.',
+                            solution: 'SiteGround 190ms TTFB NVMe storage guarantees 99.99% uptime.'
+                        },
+                        cta_text: 'Switch to 3X Faster Hosting Today'
+                    };
+                    const copyPack = rawV.ad_copy_pack || {
+                        headlines: ['Stop Losing Store Sales', '3X Faster WooCommerce', '99.99% Uptime Guarantee'],
+                        primary_texts: ['Is your slow hosting killing sales? Upgrade to SiteGround 3X SuperCacher powered by Google Cloud infrastructure.'],
+                        descriptions: ['Rated 4.9/5 stars on Trustpilot. Free 1-click site migration and 24/7 expert support included.'],
+                        landing_page_hero: {
+                            headline: 'Stop Fixing Crashes. Start Scaling Sales.',
+                            subheadline: 'Ultra-reliable Managed WordPress hosting backed by Google Cloud & 24/7 technical experts.'
+                        }
+                    };
+                    const scenesList = rawV.scenes || [
+                        { time_start: 0, time_end: 3, abcd_phase: 'A - Attention', visual_description: 'Frustrated store owner staring at 500 error screen on laptop', voiceover_ssml: '<speak>500 Server Error at 2AM? Your checkout just went down.</speak>', kinetic_text: 'STOP LOSING SALES' },
+                        { time_start: 3, time_end: 7, abcd_phase: 'B - Branding & Connection', visual_description: 'SiteGround green logo with 3X SuperCacher NVMe speed gauge', voiceover_ssml: '<speak>Switch to SiteGround for 3X faster Google Cloud speed!</speak>', kinetic_text: '3X FASTER NVMe' },
+                        { time_start: 7, time_end: 15, abcd_phase: 'D - Direction', visual_description: 'Site Tools dashboard showing 1-click staging & 80% Off promo', voiceover_ssml: '<speak>Get up to 80% off today. Click below to launch risk-free!</speak>', kinetic_text: 'GET 80% OFF TODAY' }
+                    ];
+                    const psych = rawV.audience_psychology || {
+                        target_persona: 'High-Growth WooCommerce Store Owners ($10k-$100k/mo GMV)',
+                        core_objection: 'Will migrating to a new host cause downtime or lose orders?',
+                        counter_argument: 'Free automated migrator tool + 24/7 technical team live migration guarantee.',
+                        cognitive_bias: 'Loss Aversion & Authority Bias (Google Cloud Partner & 4.9 Trustpilot)'
+                    };
+
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:380px;" onclick="if(!event.target.closest('button, input, select, textarea')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:${node.width || 450}px; min-width:380px; max-width:720px; resize:both; overflow:hidden;" onclick="if(!event.target.closest('button, input, select, textarea, .tab-btn')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
                             <div class="node-port node-port-in port-type-prompt" data-node-id="${node.id}" data-port-type="prompt" onmouseup="finishWireConnect('${node.id}', event)" title="Prompt Input Socket" style="top:50%;">📝</div>
                             <div class="node-port node-port-out port-type-image" data-node-id="${node.id}" data-port-type="image" onmousedown="startWireDrag('${node.id}', 'image', event)" title="Click or Drag to Spawn Image Asset" style="top:30%;">🖼️</div>
                             <div class="node-port node-port-out port-type-audio" data-node-id="${node.id}" data-port-type="audio" onmousedown="startWireDrag('${node.id}', 'audio', event)" title="Click or Drag to Spawn Audio Narration" style="top:50%;">🎙️</div>
                             <div class="node-port node-port-out port-type-video" data-node-id="${node.id}" data-port-type="video" onmousedown="startWireDrag('${node.id}', 'video', event)" title="Click or Drag to Spawn 50+ Variations Matrix" style="top:70%;">⚡</div>
                             <div class="canvas-node-header" onmousedown="startNodeDrag(event, '${node.id}')">
-                                <span>📝 ${node.data.title}</span>
+                                <span style="font-size:0.75rem; font-weight:700;">📝 ${node.data.title}</span>
                                 <div style="display:flex; align-items:center; gap:6px;">
-                                    <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
+                                    <button onclick="toggleNarrativeZoom('${node.id}')" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:0.75rem;" title="Zoom / Expand Document View">🔍 Zoom</button>
+                                    <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Collapse">⤢</button>
                                     <label style="display:flex; align-items:center; gap:3px; font-size:0.72rem; cursor:pointer;">
                                         <input type="checkbox" ${checkChecked} onclick="toggleNodeSelection('${node.id}', event)"> Select
                                     </label>
                                     <button style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.85rem;" onclick="removeCanvasNode('${node.id}')" title="Remove Narrative">❌</button>
                                 </div>
                             </div>
-                            <div class="canvas-node-body">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <div class="canvas-node-body" style="display:flex; flex-direction:column; gap:8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
                                     <span style="font-size:0.75rem; color:var(--sg-green); font-weight:700;">Predicted CTR: ${node.data.predicted_ctr || '8.8%'} 🔥</span>
-                                    <span class="badge badge-teal" style="font-size:0.62rem;">Conv: 14.2%</span>
+                                    <span class="badge badge-teal" style="font-size:0.62rem;">Conv: ${node.data.conv_rate || '14.2%'}</span>
                                 </div>
-                                <p style="font-size:0.78rem; line-height:1.4; background:rgba(3,7,18,0.6); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); margin:6px 0;">${node.data.hook_text || 'Hook: Stop losing sales due to slow page loads!'}</p>
-                                <div style="display:flex; gap:4px; margin-top:8px;">
+
+                                <!-- Marketing Document Tabs -->
+                                <div style="display:flex; gap:2px; background:rgba(0,0,0,0.4); padding:2px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'hook' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'hook' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'hook' ? '700' : '400'};" onclick="setNarrativeTab('${node.id}', 'hook')">🎣 Hook & Angle</button>
+                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'storyboard' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'storyboard' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'storyboard' ? '700' : '400'};" onclick="setNarrativeTab('${node.id}', 'storyboard')">🎬 Storyboard</button>
+                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'copy' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'copy' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'copy' ? '700' : '400'};" onclick="setNarrativeTab('${node.id}', 'copy')">📋 Ad Copy</button>
+                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'psychology' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'psychology' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'psychology' ? '700' : '400'};" onclick="setNarrativeTab('${node.id}', 'psychology')">🧠 Psychology</button>
+                                </div>
+
+                                <!-- Tab 1: Hook & Angle (PAS Framework) -->
+                                <div style="display:${narTab === 'hook' ? 'flex' : 'none'}; flex-direction:column; gap:6px;">
+                                    <div style="font-size:0.78rem; line-height:1.4; background:rgba(3,7,18,0.7); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+                                        <b style="color:#38bdf8;">🎯 Attention Hook:</b><br>
+                                        <i>"${escapeHtml(hookBd.hook_text || node.data.hook_text || '')}"</i>
+                                    </div>
+                                    <div style="font-size:0.68rem; color:var(--text-muted);">
+                                        💡 <b>Trigger:</b> ${escapeHtml(hookBd.emotional_trigger || 'Loss Aversion')}
+                                    </div>
+                                    <div style="font-size:0.68rem; background:rgba(15,23,42,0.8); padding:6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:3px;">
+                                        <div>🔴 <b>Problem:</b> ${escapeHtml(hookBd.pas_framework?.problem || '')}</div>
+                                        <div>🟡 <b>Agitation:</b> ${escapeHtml(hookBd.pas_framework?.agitation || '')}</div>
+                                        <div>🟢 <b>Solution:</b> ${escapeHtml(hookBd.pas_framework?.solution || '')}</div>
+                                    </div>
+                                    <div style="font-size:0.68rem; color:var(--sg-green);">
+                                        👉 <b>Direct CTA:</b> ${escapeHtml(hookBd.cta_text || 'Switch to SiteGround Today')}
+                                    </div>
+                                </div>
+
+                                <!-- Tab 2: ABCD Storyboard & Video Script Breakdown -->
+                                <div style="display:${narTab === 'storyboard' ? 'flex' : 'none'}; flex-direction:column; gap:5px; max-height:220px; overflow-y:auto;">
+                                    ${scenesList.map((sc, i) => `
+                                        <div style="font-size:0.66rem; background:rgba(3,7,18,0.85); padding:6px; border-radius:6px; border:1px solid rgba(56,189,248,0.2);">
+                                            <div style="display:flex; justify-content:space-between; color:#38bdf8; font-weight:700; margin-bottom:2px;">
+                                                <span>⏱️ Scene ${i+1} (${sc.time_start || 0}-${sc.time_end || 5}s) • ${escapeHtml(sc.abcd_phase || 'Phase')}</span>
+                                                <span style="color:#a855f7;">${escapeHtml(sc.kinetic_text || '')}</span>
+                                            </div>
+                                            <div style="color:var(--text-sub); margin-bottom:2px;"><b>Visual:</b> ${escapeHtml(sc.visual_description || '')}</div>
+                                            <div style="color:#a5f3fc; font-style:italic;"><b>VO:</b> "${escapeHtml((sc.voiceover_ssml || '').replace(/<[^>]*>/g, ''))}"</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                <!-- Tab 3: Copywriting Pack (Headlines, Body, Descriptions) -->
+                                <div style="display:${narTab === 'copy' ? 'flex' : 'none'}; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
+                                    <div style="font-size:0.68rem; background:rgba(3,7,18,0.8); padding:6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
+                                        <b style="color:var(--sg-green);">📌 High-CTR Headlines:</b>
+                                        <ul style="margin:3px 0 0 14px; padding:0; color:#fff;">
+                                            ${(copyPack.headlines || []).map(h => `<li>${escapeHtml(h)}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                    <div style="font-size:0.68rem; background:rgba(3,7,18,0.8); padding:6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
+                                        <b style="color:#38bdf8;">📝 Primary Ad Body:</b>
+                                        <div style="margin-top:2px; color:var(--text-sub);">${escapeHtml((copyPack.primary_texts || [])[0] || '')}</div>
+                                    </div>
+                                    <div style="font-size:0.68rem; background:rgba(3,7,18,0.8); padding:6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
+                                        <b style="color:#c084fc;">🚀 Landing Page Hero:</b>
+                                        <div style="font-weight:700; color:#fff;">"${escapeHtml(copyPack.landing_page_hero?.headline || '')}"</div>
+                                        <div style="color:var(--text-muted);">${escapeHtml(copyPack.landing_page_hero?.subheadline || '')}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Tab 4: Audience Psychology & Objections Matrix -->
+                                <div style="display:${narTab === 'psychology' ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
+                                    <div style="font-size:0.68rem; background:rgba(3,7,18,0.8); padding:6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
+                                        <b style="color:#38bdf8;">👥 Target Persona:</b>
+                                        <div style="color:#fff;">${escapeHtml(psych.target_persona || 'WooCommerce Merchants')}</div>
+                                    </div>
+                                    <div style="font-size:0.68rem; background:rgba(3,7,18,0.8); padding:6px; border-radius:6px; border:1px solid rgba(239,68,68,0.3);">
+                                        <b style="color:#fca5a5;">⚠️ Primary Objection:</b>
+                                        <div style="color:#fff;">"${escapeHtml(psych.core_objection || '')}"</div>
+                                    </div>
+                                    <div style="font-size:0.68rem; background:rgba(3,7,18,0.8); padding:6px; border-radius:6px; border:1px solid rgba(16,185,129,0.3);">
+                                        <b style="color:var(--sg-green);">🛡️ Pre-Emptive Counter-Argument:</b>
+                                        <div style="color:#fff;">${escapeHtml(psych.counter_argument || '')}</div>
+                                    </div>
+                                    <div style="font-size:0.65rem; color:var(--text-muted);">
+                                        🧠 <b>Cognitive Biases:</b> ${escapeHtml(psych.cognitive_bias || '')}
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div style="display:flex; gap:4px; margin-top:4px;">
                                     <button class="btn-secondary" id="btn-nar-${node.id}" style="flex:1; font-size:0.72rem; padding:4px 6px;" onclick="generateImagesForNarrativeNode('${node.id}')">
                                         🖼️ Generate Images
                                     </button>
@@ -3312,6 +3426,7 @@
         }
 
         async function generateImagesForNarrativeNode(narrativeId, customPrompt = null) {
+            console.log("generateImagesForNarrativeNode triggered for:", narrativeId);
             const btn = document.getElementById(`btn-nar-${narrativeId}`);
             const wrap = document.getElementById(`prog-wrap-${narrativeId}`);
             const bar = document.getElementById(`prog-bar-${narrativeId}`);
@@ -3373,12 +3488,11 @@
                     return;
                 }
             } catch(e) {
-                console.error(e);
+                console.error("Image generation error:", e);
             }
 
-            // Fallback Image Node
+            // Fallback image node
             clearInterval(interval);
-            if (bar) bar.style.width = '100%';
             const fallbackImgId = `img_${Date.now()}`;
             canvasNodes.push({
                 id: fallbackImgId,
@@ -5819,6 +5933,25 @@
                 node.data.activeTab = tabName;
                 renderCanvasNodes();
             }
+        }
+
+        function setNarrativeTab(nodeId, tabName) {
+            const node = canvasNodes.find(n => n.id === nodeId);
+            if (node) {
+                node.data.activeTab = tabName;
+                renderCanvasNodes();
+            }
+        }
+
+        function toggleNarrativeZoom(nodeId) {
+            const node = canvasNodes.find(n => n.id === nodeId);
+            if (!node) return;
+            if (node.width && node.width > 500) {
+                node.width = 450;
+            } else {
+                node.width = 620;
+            }
+            renderCanvasNodes();
         }
 
         function spawnMatrixForNarrative(narId) {
