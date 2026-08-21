@@ -117,7 +117,7 @@ def get_gemini_campaign_copy(prompt_text: str) -> dict:
             "\"category\": ('staging', 'green', 'cdn', 'discount', 'speed', or 'clean_white')"
         )
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash',
             contents=f"Generate marketing ad banner copy for this prompt: '{prompt_text}'. Respect any color rules specified (such as 'no red' or 'white background').",
             config=dict(
                 system_instruction=system_instruction,
@@ -614,16 +614,21 @@ def generate_image_variations(image_name: str, prompt_text: str = "") -> dict:
         {"name": "Clean Editorial White", "prompt": f"{prompt_text}. Clean crisp white background with bold black typography"}
     ]
 
-    variations = []
-    for idx, p in enumerate(palettes):
+    import concurrent.futures
+
+    def _generate_single_variation(item):
+        idx, p = item
         v_filename = generate_campaign_asset("speed", p["prompt"])
-        variations.append({
+        return {
             "variant_id": f"var_{idx+1}",
             "palette": p["name"],
             "prompt": p["prompt"],
             "filename": v_filename,
             "image_url": f"/media/{v_filename}"
-        })
+        }
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        variations = list(executor.map(_generate_single_variation, enumerate(palettes)))
 
     return {
         "status": "success",

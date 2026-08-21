@@ -19,12 +19,12 @@ RUN pip install --no-cache-dir uv==0.8.13
 
 WORKDIR /code
 
-COPY ./pyproject.toml ./README.md ./uv.lock* ./
+COPY ./pyproject.toml ./README.md ./
 COPY ./app ./app
 COPY ./index.html ./index.html
 RUN mkdir -p ./media ./uploads
 
-RUN uv sync
+RUN uv sync --default-index https://pypi.org/simple
 
 ARG COMMIT_SHA=""
 ENV COMMIT_SHA=${COMMIT_SHA}
