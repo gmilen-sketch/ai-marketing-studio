@@ -116,15 +116,26 @@ def get_gemini_campaign_copy(prompt_text: str) -> dict:
             "\"cta\": (uppercase call to action button text 4-7 words), "
             "\"category\": ('staging', 'green', 'cdn', 'discount', 'speed', or 'clean_white')"
         )
-        response = client.models.generate_content(
-            model='gemini-3.5-flash',
-            contents=f"Generate marketing ad banner copy for this prompt: '{prompt_text}'. Respect any color rules specified (such as 'no red' or 'white background').",
-            config=dict(
-                system_instruction=system_instruction,
-                response_mime_type="application/json",
-                temperature=0.2,
+        try:
+            response = client.models.generate_content(
+                model='gemini-3.7-flash',
+                contents=f"Generate marketing ad banner copy for this prompt: '{prompt_text}'. Respect any color rules specified (such as 'no red' or 'white background').",
+                config=dict(
+                    system_instruction=system_instruction,
+                    response_mime_type="application/json",
+                    temperature=0.2,
+                )
             )
-        )
+        except Exception:
+            response = client.models.generate_content(
+                model='gemini-3.6-flash',
+                contents=f"Generate marketing ad banner copy for this prompt: '{prompt_text}'. Respect any color rules specified (such as 'no red' or 'white background').",
+                config=dict(
+                    system_instruction=system_instruction,
+                    response_mime_type="application/json",
+                    temperature=0.2,
+                )
+            )
         data = json.loads(response.text)
         return data
     except Exception as e:

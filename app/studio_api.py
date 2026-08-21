@@ -176,16 +176,25 @@ async def generate_scripts(request: Request):
     """
     try:
         client = Client()
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json"
-            ),
-        )
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.7-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                ),
+            )
+        except Exception:
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                ),
+            )
         data = json.loads(response.text)
         if data and "variants" in data and len(data["variants"]) > 0:
-            print("Successfully generated scripts using Gemini 3.6 Flash")
+            print("Successfully generated scripts using Gemini 3.7 Flash")
             project_id = body.get("project_id")
             if project_id and project_id in PROJECTS_STORE:
                 PROJECTS_STORE[project_id]["scripts"] = data["variants"]
@@ -524,11 +533,18 @@ async def stitch_videos(request: Request):
         }}
         """
         client = Client()
-        omni_res = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=omni_prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json")
-        )
+        try:
+            omni_res = client.models.generate_content(
+                model="gemini-3.7-flash",
+                contents=omni_prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json")
+            )
+        except Exception:
+            omni_res = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=omni_prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json")
+            )
         omni_data = json.loads(omni_res.text)
         if omni_data:
             transition_type = omni_data.get("transition_type", "fade")
@@ -762,10 +778,16 @@ async def synthesize_audio(request: Request):
                 f"Preserve brand names like SiteGround, Google Cloud, and SuperCacher. "
                 f"Output ONLY the translated plain text without any quotes or commentary:\n\n{clean_text}"
             )
-            res = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=translation_prompt,
-            )
+            try:
+                res = client.models.generate_content(
+                    model="gemini-3.7-flash",
+                    contents=translation_prompt,
+                )
+            except Exception:
+                res = client.models.generate_content(
+                    model="gemini-3.6-flash",
+                    contents=translation_prompt,
+                )
             translated_text = res.text.strip()
             if translated_text:
                 clean_text = translated_text

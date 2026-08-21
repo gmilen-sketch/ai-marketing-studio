@@ -63,9 +63,14 @@ def generate_siteground_script(campaign_brief: str, category: str) -> str:
         "Add visual directions and cue markers in italics (e.g., *[Visual: Frustrated developer looking at spinning wheel]*)."
     )
 
-    response = client.models.generate_content(
-        model="gemini-3.5-flash", contents=[prompt]
-    )
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.7-flash", contents=[prompt]
+        )
+    except Exception:
+        response = client.models.generate_content(
+            model="gemini-3.6-flash", contents=[prompt]
+        )
     return response.text
 
 
@@ -259,7 +264,7 @@ def compile_voiceover_and_video(
 root_agent = Agent(
     name="cloud_hosting_video_producer",
     model=Gemini(
-        model="gemini-3.5-flash",
+        model="gemini-3.7-flash",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction="""
