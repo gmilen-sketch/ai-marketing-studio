@@ -16,9 +16,13 @@ async def serve_index():
 
 @app.get("/media/{filename}")
 async def serve_media(filename: str):
-    file_path = os.path.join(PROJECT_DIR, filename)
+    file_path = os.path.join(PROJECT_DIR, "media", filename)
     if not os.path.exists(file_path):
-        file_path = os.path.join(PROJECT_DIR, "media", filename)
+        file_path = os.path.join(PROJECT_DIR, "assets", filename)
+    if not os.path.exists(file_path):
+        file_path = os.path.join(PROJECT_DIR, "uploads", filename)
+    if not os.path.exists(file_path):
+        file_path = os.path.join(PROJECT_DIR, filename)
     if not os.path.exists(file_path):
         if filename.startswith("asset_") or filename in ("slide.png", "sg_logo_badge.png", "gcp_cloud_badge.png"):
             from app.image_studio import generate_campaign_asset
