@@ -21,28 +21,61 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 @router.get("/ppc/telemetry")
 async def get_ppc_telemetry():
     """BigQuery Closed-Loop Performance Data RAG Telemetry."""
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=os.environ.get("GOOGLE_CLOUD_PROJECT", "firsttestproject-343414"))
+        query = """
+            SELECT hook_text, avg_ctr, conversion_rate, category, search_query_cluster, abcd_quality_score
+            FROM `firsttestproject-343414.siteground_marketing_analytics.pmax_creative_telemetry`
+            ORDER BY conversion_rate DESC LIMIT 5
+        """
+        results = list(client.query(query).result())
+        if results:
+            hooks = []
+            for r in results:
+                hooks.append({
+                    "hook": r["hook_text"],
+                    "avg_ctr": float(r["avg_ctr"]),
+                    "conversion_rate": float(r["conversion_rate"]),
+                    "category": r["category"],
+                    "search_query_cluster": r.get("search_query_cluster", "general"),
+                    "abcd_score": float(r.get("abcd_quality_score", 9.5))
+                })
+            return {
+                "source": "BigQuery (firsttestproject-343414.siteground_marketing_analytics)",
+                "top_performing_hooks": hooks,
+                "conversion_benchmarks": {
+                    "top_10_percent_roas": 4.85,
+                    "avg_cpa_decrease": "32%",
+                    "recommended_pacing_rate": 1.05,
+                }
+            }
+    except Exception as e:
+        print(f"BigQuery live query fallback: {e}")
+
     return {
+        "source": "Fallback Cache",
         "top_performing_hooks": [
             {
-                "hook": "Is your slow website killing your sales?",
-                "avg_ctr": 0.0842,
+                "hook": "Is your slow website killing your sales? 1-second delay = 7% conversion loss.",
+                "avg_ctr": 0.0884,
                 "conversion_rate": 0.1420,
                 "category": "managed_wordpress",
-                "search_query_cluster": "slow wordpress site fix",
+                "search_query_cluster": "slow wordpress site checkout fix",
             },
             {
-                "hook": "500 Internal Server Error at 2 AM? Fix it in 10 seconds.",
-                "avg_ctr": 0.0915,
-                "conversion_rate": 0.1580,
+                "hook": "Stop paying $200/mo for sluggish cloud hosting. Switch to SiteGround Ultra NVMe.",
+                "avg_ctr": 0.0842,
+                "conversion_rate": 0.1280,
                 "category": "cloud_hosting",
-                "search_query_cluster": "wordpress crash support 24/7",
+                "search_query_cluster": "best fast agency cloud hosting 2026",
             },
             {
-                "hook": "Stop paying $200/mo for sluggish hosting. Switch to SiteGround.",
-                "avg_ctr": 0.0760,
-                "conversion_rate": 0.1290,
-                "category": "agency_hosting",
-                "search_query_cluster": "best fast wordpress host",
+                "hook": "It's 2 AM and your site is DOWN. SiteGround 24/7 technical experts reply in 2 seconds.",
+                "avg_ctr": 0.0805,
+                "conversion_rate": 0.1190,
+                "category": "enterprise_support",
+                "search_query_cluster": "reliable 24 7 wordpress support hosting",
             },
         ],
         "conversion_benchmarks": {
@@ -51,6 +84,32 @@ async def get_ppc_telemetry():
             "recommended_pacing_rate": 1.05,
         },
     }
+
+
+@router.get("/analytics/cohorts")
+async def get_customer_cohorts():
+    """Retrieve BigQuery Customer Cohort LTV & Segment Intelligence."""
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=os.environ.get("GOOGLE_CLOUD_PROJECT", "firsttestproject-343414"))
+        query = "SELECT * FROM `firsttestproject-343414.siteground_marketing_analytics.customer_cohorts_ltv`"
+        results = [dict(row) for row in client.query(query).result()]
+        return {"status": "success", "cohorts": results}
+    except Exception as e:
+        return {"status": "fallback", "error": str(e), "cohorts": []}
+
+
+@router.get("/analytics/benchmarks")
+async def get_competitor_benchmarks():
+    """Retrieve BigQuery Competitor Performance & Counter-Positioning Data."""
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=os.environ.get("GOOGLE_CLOUD_PROJECT", "firsttestproject-343414"))
+        query = "SELECT * FROM `firsttestproject-343414.siteground_marketing_analytics.competitor_benchmarks`"
+        results = [dict(row) for row in client.query(query).result()]
+        return {"status": "success", "benchmarks": results}
+    except Exception as e:
+        return {"status": "fallback", "error": str(e), "benchmarks": []}
 
 
 def generate_studio_scripts(product_feature, target_audience="Managed WordPress Store Owners", duration=15):
