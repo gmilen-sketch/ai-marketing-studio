@@ -2105,6 +2105,21 @@
             renderCanvasNodes();
         }
 
+        function getVersionDropdownHtml(node) {
+            if (!node.data || !node.data.versions || node.data.versions.length <= 1) {
+                if (node.data && node.data.version && node.data.version !== 'v1') {
+                    return `<span style="font-size:0.65rem; font-weight:800; color:var(--sg-green); background:rgba(16,185,129,0.15); border:1px solid var(--sg-green); padding:1px 5px; border-radius:4px;">${node.data.version}</span>`;
+                }
+                return '';
+            }
+            const currentIdx = node.data.currentVersionIdx || 0;
+            return `
+                <select class="card-version-select" onclick="event.stopPropagation();" onchange="event.stopPropagation(); switchCardActiveVersion('${node.id}', parseInt(this.value));" style="background:rgba(16,185,129,0.25); border:1px solid var(--sg-green); color:var(--sg-green); font-size:0.68rem; font-weight:800; border-radius:4px; padding:1px 4px; cursor:pointer;" title="Switch Active Version">
+                    ${node.data.versions.map((v, i) => `<option value="${i}" ${i === currentIdx ? 'selected' : ''}>${v.ver || 'v' + (i+1)}</option>`).join('')}
+                </select>
+            `;
+        }
+
         function renderCanvasNodes() {
             const layer = document.getElementById('canvas-nodes-layer');
             if (!layer) return;
@@ -2176,7 +2191,10 @@
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <span style="font-size:1.1rem;">🎯</span>
                                     <div>
-                                        <div style="font-weight:800; font-size:0.88rem; color:#fff;">Strategic Campaign Brief & Ideation</div>
+                                        <div style="font-weight:800; font-size:0.88rem; color:#fff; display:flex; align-items:center; gap:6px;">
+                                            <span>Strategic Campaign Brief & Ideation</span>
+                                            ${getVersionDropdownHtml(node)}
+                                        </div>
                                         <div style="font-size:0.68rem; color:var(--sg-green);">BigQuery Telemetry + Gemini 3.7 Strategic Foundation</div>
                                     </div>
                                 </div>
@@ -2304,7 +2322,10 @@
                             <div class="node-port node-port-out port-type-audio" data-node-id="${node.id}" data-port-type="audio" onmousedown="startWireDrag('${node.id}', 'audio', event)" title="Click or Drag to Spawn Audio Narration" style="top:50%;">🎙️</div>
                             <div class="node-port node-port-out port-type-video" data-node-id="${node.id}" data-port-type="video" onmousedown="startWireDrag('${node.id}', 'video', event)" title="Click or Drag to Spawn 50+ Variations Matrix" style="top:70%;">⚡</div>
                             <div class="canvas-node-header" onmousedown="startNodeDrag(event, '${node.id}')">
-                                <span style="font-size:0.75rem; font-weight:700;">📝 ${node.data.title}</span>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span style="font-size:0.75rem; font-weight:700;">📝 ${node.data.title}</span>
+                                    ${getVersionDropdownHtml(node)}
+                                </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:#38bdf8; font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="event.stopPropagation(); toggleNarrativeZoom('${node.id}')" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:0.75rem;" title="Zoom / Expand Document View">⤢ View</button>
@@ -2671,7 +2692,10 @@
                             <div class="node-port node-port-in port-type-image" data-node-id="${node.id}" data-port-type="image" onmouseup="finishWireConnect('${node.id}', event)" title="Image Input Socket" style="top:50%;">🖼️</div>
                             <div class="node-port node-port-out port-type-video" data-node-id="${node.id}" data-port-type="video" onmousedown="startWireDrag('${node.id}', 'video', event)" title="Video Output Socket" style="top:50%;">📹</div>
                             <div class="canvas-node-header" onmousedown="startNodeDrag(event, '${node.id}')">
-                                <span>🎬 Video Clip (${node.data.duration || '8.0s'})</span>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span>🎬 Video Clip (${node.data.duration || '8.0s'})</span>
+                                    ${getVersionDropdownHtml(node)}
+                                </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:#38bdf8; font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
@@ -2705,7 +2729,10 @@
                             <div class="node-port node-port-in port-type-prompt" data-node-id="${node.id}" data-port-type="prompt" onmouseup="finishWireConnect('${node.id}', event)" title="Script Input Socket" style="top:50%;">📝</div>
                             <div class="node-port node-port-out port-type-audio" data-node-id="${node.id}" data-port-type="audio" onmousedown="startWireDrag('${node.id}', 'audio', event)" title="Audio Output Socket" style="top:50%;">🎙️</div>
                             <div class="canvas-node-header" style="background:linear-gradient(135deg,rgba(56,189,248,0.25),rgba(16,185,129,0.25));" onmousedown="startNodeDrag(event, '${node.id}')">
-                                <span>🎙️ Audio Narration (${currentLang})</span>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span>🎙️ Audio Narration (${currentLang})</span>
+                                    ${getVersionDropdownHtml(node)}
+                                </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:#c084fc; font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
@@ -2791,7 +2818,10 @@
                             <div class="node-port node-port-in port-type-image" data-node-id="${node.id}" data-port-slot="image" onmouseup="finishWireConnect('${node.id}', event)" title="Image / Overlay Asset Input" style="top:82%;">🖼️</div>
 
                             <div class="canvas-node-header" style="background:linear-gradient(135deg,rgba(150,203,76,0.35),rgba(56,189,248,0.35));" onmousedown="startNodeDrag(event, '${node.id}')">
-                                <span>⚡ Video Combiner & Master Ad (${node.data.version || 'v1'})</span>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span>⚡ Video Combiner & Master Ad</span>
+                                    ${getVersionDropdownHtml(node)}
+                                </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:var(--sg-green); font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
@@ -6473,13 +6503,24 @@
             selectedNodeIds.clear();
             selectedNodeIds.add(node.id);
 
-            // 1. Calculate Cinema Glide Camera Positioning (offset for 440px right inspector)
-            const nodeW = node.width || (node.type === 'expansion_matrix' ? 480 : (node.type === 'image' ? 400 : 420));
-            const nodeH = 340;
-            const targetZoom = 1.30;
-            const availableW = window.innerWidth - 440;
-            const centerX = availableW / 2;
-            const centerY = window.innerHeight / 2;
+            // 1. Calculate Full-Frame Cinema Dynamic Zoom (Fills ~85% of central workspace)
+            const copilotSidebar = document.getElementById('copilot-sidebar-panel');
+            const isSidebarOpen = copilotSidebar && !copilotSidebar.classList.contains('copilot-sidebar-collapsed') && copilotSidebar.style.display !== 'none';
+            const leftMargin = isSidebarOpen ? (copilotSidebar.offsetWidth || 340) : 20;
+            const rightMargin = 440; // Slide-over inspector width
+            const availableW = Math.max(380, window.innerWidth - leftMargin - rightMargin);
+            const availableH = Math.max(300, window.innerHeight - 130); // Top bar (55px) + bottom HUD (75px)
+
+            const nodeW = node.width || (node.type === 'expansion_matrix' ? 480 : (node.type === 'image' ? 400 : (node.type === 'launcher' ? 480 : 450)));
+            const nodeH = node.height || (node.type === 'expansion_matrix' ? 480 : (node.type === 'launcher' ? 380 : 360));
+
+            // Dynamic zoom factor to comfortably fill 82-86% of the available workspace
+            const zoomW = (availableW * 0.85) / nodeW;
+            const zoomH = (availableH * 0.85) / nodeH;
+            const targetZoom = Math.min(Math.max(1.35, Math.min(zoomW, zoomH)), 1.85);
+
+            const centerX = leftMargin + (availableW / 2);
+            const centerY = 55 + (availableH / 2);
 
             canvasZoom = targetZoom;
             canvasPanX = centerX - (node.x + nodeW / 2) * canvasZoom;
@@ -6545,6 +6586,61 @@
             enterFocusMode(canvasNodes[prevIdx].id);
         }
 
+        function switchCardActiveVersion(nodeId, versionIdx) {
+            const node = canvasNodes.find(n => n.id === nodeId);
+            if (!node || !node.data || !node.data.versions) return;
+            const v = node.data.versions[versionIdx];
+            if (!v) return;
+
+            node.data.currentVersionIdx = versionIdx;
+            node.data.version = v.ver || `v${versionIdx + 1}`;
+
+            if (v.hook_text) node.data.hook_text = v.hook_text;
+            if (v.headline) node.data.headline = v.headline;
+            if (v.subtitle) node.data.subtitle = v.subtitle;
+            if (v.cta) node.data.cta = v.cta;
+            if (v.url) {
+                if (node.type === 'image') node.data.file_path = v.url;
+                else if (node.type === 'clip' || node.type === 'master_video') node.data.video_url = v.url;
+                else if (node.type === 'audio') node.data.audio_url = v.url;
+            }
+            if (v.prompt) node.data.prompt = v.prompt;
+
+            renderCanvasNodes();
+            if (isFocusMode && focusedNodeId === nodeId) {
+                populateInspectorForNode(node);
+            }
+
+            appendBotChatMessage(`
+                <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">🔄 Switched to Version ${node.data.version}</div>
+                <p style="margin:4px 0 0 0; font-size:0.8rem;">Restored card state to <b>${node.data.version}</b>.</p>
+            `);
+        }
+
+        function forkToNewCanvasCard(nodeId) {
+            const sourceNode = canvasNodes.find(n => n.id === nodeId);
+            if (!sourceNode) return;
+
+            const curVer = sourceNode.data?.version || 'v2';
+            const newNodeId = `${sourceNode.type}_fork_${Date.now()}`;
+            const forkedNode = JSON.parse(JSON.stringify(sourceNode));
+            forkedNode.id = newNodeId;
+            forkedNode.x = sourceNode.x + (sourceNode.width || 450) + 40;
+            forkedNode.y = sourceNode.y + 20;
+            if (!forkedNode.data) forkedNode.data = {};
+            forkedNode.data.title = `${sourceNode.data.title || 'Component'} (Fork ${curVer})`;
+            forkedNode.data.version = curVer;
+
+            canvasNodes.push(forkedNode);
+            renderCanvasNodes();
+            enterFocusMode(newNodeId);
+
+            appendBotChatMessage(`
+                <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">🔱 Forked New Card to Workbench</div>
+                <p style="margin:4px 0 0 0; font-size:0.8rem;">Spawned branch card <b>${forkedNode.data.title}</b> side-by-side on canvas.</p>
+            `);
+        }
+
         function syncInspectorToNodeLive() {
             if (!focusedNodeId) return;
             const node = canvasNodes.find(n => n.id === focusedNodeId);
@@ -6585,6 +6681,13 @@
             } else if (node.type === 'clip') {
                 const caption = document.getElementById('insp-video-caption')?.value;
                 if (caption !== undefined) node.data.prompt = caption;
+            } else if (node.type === 'launcher') {
+                const goal = document.getElementById('insp-launch-goal')?.value;
+                const aud = document.getElementById('insp-launch-aud')?.value;
+                const feat = document.getElementById('insp-launch-feat')?.value;
+                if (goal !== undefined) node.data.goal = goal;
+                if (aud !== undefined) node.data.audience = aud;
+                if (feat !== undefined) node.data.feature = feat;
             }
 
             renderCanvasNodes();
@@ -6602,13 +6705,92 @@
 
             bodyEl.innerHTML = '';
 
+            // Top Version History & Fork-as-Card Bar
+            const verList = node.data?.versions || [{ ver: node.data?.version || 'v1' }];
+            const curIdx = node.data?.currentVersionIdx || 0;
+            bodyEl.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:6px 10px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:4px; font-size:0.72rem; color:var(--text-muted);">
+                        <span style="font-weight:700; color:var(--text-sub);">🏷️ Versions:</span>
+                        ${verList.map((v, i) => `
+                            <button class="topbar-btn" style="height:22px; font-size:0.65rem; padding:0 6px; ${i === curIdx ? 'background:var(--sg-green); color:#000; font-weight:800; border-color:var(--sg-green);' : ''}" onclick="switchCardActiveVersion('${node.id}', ${i})">${v.ver || 'v' + (i+1)}</button>
+                        `).join('')}
+                    </div>
+                    <button class="topbar-btn" style="height:22px; font-size:0.68rem; padding:0 8px; border-color:var(--sg-teal); color:#38bdf8; font-weight:700;" onclick="forkToNewCanvasCard('${node.id}')" title="Spawn as a separate card on workbench">
+                        🔱 Fork to Card
+                    </button>
+                </div>
+            `;
+
             // In-Inspector Toast Container
             bodyEl.innerHTML += `<div id="inspector-toast-wrap" style="min-height:0;"></div>`;
 
             // -------------------------------------------------------------
+            // CASE 0: LAUNCHER BRIEF & STRATEGIC IDEATION NODE
+            // -------------------------------------------------------------
+            if (node.type === 'launcher') {
+                if (iconEl) iconEl.innerText = '🎯';
+                if (titleEl) titleEl.innerText = 'Strategic Campaign Brief & Ideation';
+                if (subEl) subEl.innerText = 'BigQuery Telemetry, Target Audience Persona, Value Prop & Live Synthesis';
+
+                const goalVal = node.data.goal || 'Win 20% EMEA market share from slow shared hosting';
+                const audVal = node.data.audience || 'US WooCommerce Merchants ($2,890 LTV • Opp: 96.0)';
+                const featVal = node.data.feature || '3X SuperCacher Speed Boost & NVMe Storage';
+
+                bodyEl.innerHTML += `
+                    <!-- 1. Campaign Goal & Value Prop Controls (Live 2-Way Sync) -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green); display:flex; justify-content:space-between;">
+                            <span>🎯 Campaign Strategic Parameters</span>
+                            <span style="font-size:0.65rem; color:var(--text-muted);">🟢 Live 2-Way Sync</span>
+                        </div>
+                        <div>
+                            <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Campaign Objective / Goal:</label>
+                            <input type="text" id="insp-launch-goal" value="${escapeHtml(goalVal)}" oninput="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Target Cohort (BigQuery Segment):</label>
+                            <select id="insp-launch-aud" onchange="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
+                                <option value="US WooCommerce Merchants ($2,890 LTV • Opp: 96.0)" ${audVal.includes('WooCommerce') ? 'selected' : ''}>🇺🇸 US WooCommerce Merchants ($2,890 LTV • Opp: 96.0)</option>
+                                <option value="EU Digital Agencies & Freelancers ($4,120 LTV • Opp: 94.2)" ${audVal.includes('Agencies') ? 'selected' : ''}>🇪🇺 EU Digital Agencies & Freelancers ($4,120 LTV • Opp: 94.2)</option>
+                                <option value="Global High-Traffic WordPress Publishers ($5,800 LTV • Opp: 91.5)" ${audVal.includes('Publishers') ? 'selected' : ''}>🌐 Global High-Traffic WordPress Publishers ($5,800 LTV • Opp: 91.5)</option>
+                                <option value="Fast-Growing SaaS & Startup Founders ($3,400 LTV • Opp: 89.0)" ${audVal.includes('SaaS') ? 'selected' : ''}>🚀 Fast-Growing SaaS & Startup Founders ($3,400 LTV • Opp: 89.0)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Core Value Proposition / Feature:</label>
+                            <select id="insp-launch-feat" onchange="syncInspectorToNodeLive()" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
+                                <option value="3X SuperCacher Speed Boost & NVMe Storage" ${featVal.includes('SuperCacher') ? 'selected' : ''}>⚡ 3X SuperCacher Speed Boost & NVMe Storage</option>
+                                <option value="Ultra-Low 190ms TTFB on Google Cloud Infrastructure" ${featVal.includes('TTFB') ? 'selected' : ''}>🌐 Ultra-Low 190ms TTFB on Google Cloud Infrastructure</option>
+                                <option value="Automated Free Site Migration with 0 Downtime" ${featVal.includes('Migration') ? 'selected' : ''}>🔄 Automated Free Site Migration with 0 Downtime</option>
+                                <option value="24/7 Expert Priority Support with 15s Response" ${featVal.includes('Support') ? 'selected' : ''}>🛡️ 24/7 Expert Priority Support with 15s Response</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 2. AI Synthesis Trigger Button -->
+                    <button class="btn-primary" style="width:100%; font-size:0.8rem; font-weight:800; padding:10px; background:linear-gradient(135deg,var(--sg-green),var(--sg-teal)); box-shadow:0 0 15px rgba(16,185,129,0.3);" onclick="generateMarketingHooks('${node.id}')">
+                        🚀 Synthesize Strategic Narrative Hooks (Gemini 3.7)
+                    </button>
+
+                    <!-- 3. Real-Time BigQuery Telemetry RAG Panel -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:6px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:#38bdf8; display:flex; justify-content:space-between;">
+                            <span>📊 BigQuery Live Telemetry Match</span>
+                            <span style="color:var(--sg-green); font-size:0.62rem; background:rgba(16,185,129,0.15); padding:1px 6px; border-radius:4px;">🟢 Active RAG</span>
+                        </div>
+                        <div style="font-size:0.72rem; line-height:1.4; color:var(--text-sub);">
+                            • <b>Top Historical Hook</b>: <i>"Stop losing 2AM store sales to 500 errors"</i> (<span style="color:var(--sg-green); font-weight:700;">8.8% CTR</span>)<br>
+                            • <b>Estimated Conversion Rate</b>: <b>14.2%</b> (+3.8% vs industry benchmark)<br>
+                            • <b>Target TTFB Advantage</b>: <b>190ms</b> (SiteGround) vs <b>650ms</b> (Legacy Host)
+                        </div>
+                    </div>
+                `;
+            }
+            // -------------------------------------------------------------
             // CASE 1: IMAGE ASSET NODE
             // -------------------------------------------------------------
-            if (node.type === 'image') {
+            else if (node.type === 'image') {
                 if (iconEl) iconEl.innerText = '🖼️';
                 if (titleEl) titleEl.innerText = 'Visual Banner Creative Suite';
                 if (subEl) subEl.innerText = 'Typography, Color Palettes, Inpainting & Multi-Format Outpainting';
@@ -6911,6 +7093,9 @@
             });
             node.data.currentVersionIdx = node.data.versions.length - 1;
             node.data.version = newVerTag;
+
+            const applyBtn = document.getElementById('btn-inspector-apply');
+            if (applyBtn) applyBtn.innerText = `✨ Apply & Fork Version (v${newVerNumber + 1})`;
 
             renderCanvasNodes();
             populateInspectorForNode(node);
