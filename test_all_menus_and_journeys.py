@@ -120,10 +120,10 @@ async def test_all_menus_and_e2e_journeys():
         await first_nar.locator("button:has-text('🎣 Hook & Angle')").click(force=True)
         await page.wait_for_timeout(300)
 
-        # Test Zoom toggle
-        await first_nar.locator("button:has-text('🔍 Zoom')").click(force=True)
+        # Test View toggle
+        await first_nar.locator("button:has-text('⤢ View')").click(force=True)
         await page.wait_for_timeout(300)
-        await first_nar.locator("button:has-text('🔍 Zoom')").click(force=True)
+        await first_nar.locator("button:has-text('⤢ View')").click(force=True)
         await page.wait_for_timeout(300)
 
         print(f"   ✅ Test 4 PASSED: {nar_count} Strategic Narrative Cards & 4 Document Tabs Verified ({time.time() - t0:.2f}s)")
@@ -291,7 +291,7 @@ async def test_all_menus_and_e2e_journeys():
         # TEST 12: Radar Minimap, Reset & Studio Assistant Chat
         # ----------------------------------------------------------------------
         t0 = time.time()
-        print("▶️ [TEST 12/12] Testing Radar Minimap, Reset & Studio Assistant Chat...")
+        print("▶️ [TEST 12/13] Testing Radar Minimap, Reset & Studio Assistant Chat...")
         await page.locator("#btn-toggle-minimap").click(force=True)
         await page.locator("#btn-toggle-minimap").click(force=True)
         await page.locator("button:has-text('🔍 Reset')").click(force=True)
@@ -307,15 +307,59 @@ async def test_all_menus_and_e2e_journeys():
         await page.wait_for_timeout(2000)
         
         # Clear chat and close
-        await page.locator("button:has-text('🗑️ Clear')").click(force=True)
-        await page.locator("button:has-text('◀')").click(force=True)
+        await page.locator("#copilot-sidebar-panel button:has-text('🗑️ Clear')").click(force=True)
+        await page.locator("#copilot-sidebar-panel button:has-text('◀')").click(force=True)
         print(f"   ✅ Test 12 PASSED: Radar Minimap, Viewport & Studio Assistant Verified ({time.time() - t0:.2f}s)")
         test_log.append(("Radar Minimap & Studio Assistant", "PASSED"))
+
+        # ----------------------------------------------------------------------
+        # TEST 13: Cinema Focus Mode & Precision Creative Inspector Navigation
+        # ----------------------------------------------------------------------
+        t0 = time.time()
+        print("▶️ [TEST 13/13] Testing Cinema Focus Mode, Studio Inspector & HUD Traversal...")
+        
+        # Enter focus mode on any visible canvas node
+        focus_btn = page.locator(".canvas-node button:has-text('🔍 Focus')").first
+        await focus_btn.click(force=True)
+        await page.wait_for_timeout(500)
+        
+        inspector = page.locator("#studio-creative-inspector")
+        hud = page.locator("#focus-navigation-hud")
+        await inspector.wait_for(state="visible", timeout=10000)
+        assert "inspector-open" in (await inspector.get_attribute("class") or "")
+        assert "hud-active" in (await hud.get_attribute("class") or "")
+        
+        # Test direct text editing in inspector & applying changes
+        headline_input = page.locator("#insp-headline")
+        if await headline_input.is_visible():
+            await headline_input.fill("SiteGround 3X Turbo Max NVMe")
+            apply_btn = page.locator("#btn-inspector-apply")
+            await apply_btn.click(force=True)
+            await page.wait_for_timeout(1000)
+        
+        # Test Next Node navigation via HUD button
+        next_btn = hud.locator("button:has-text('Next')")
+        await next_btn.click(force=True)
+        await page.wait_for_timeout(1000)
+        
+        # Test Prev Node navigation via HUD button
+        prev_btn = hud.locator("button:has-text('Prev')")
+        await prev_btn.click(force=True)
+        await page.wait_for_timeout(1000)
+        
+        # Exit focus mode via Overview HUD button
+        overview_btn = hud.locator("button:has-text('Overview')")
+        await overview_btn.click(force=True)
+        await page.wait_for_timeout(1000)
+        assert "inspector-open" not in (await inspector.get_attribute("class") or "")
+        
+        print(f"   ✅ Test 13 PASSED: Cinema Focus Mode, Studio Inspector & HUD Traversal Verified ({time.time() - t0:.2f}s)")
+        test_log.append(("Cinema Focus Mode & Inspector", "PASSED"))
 
         await browser.close()
 
     print("\n==================================================================")
-    print("🎉 FULL SUITE SUMMARY: ALL 12 STRATEGIC JOURNEYS PASSED 100%!")
+    print("🎉 FULL SUITE SUMMARY: ALL 13 STRATEGIC JOURNEYS PASSED 100%!")
     print("==================================================================")
     for name, status in test_log:
         print(f"  • {name:<40}: ✅ {status}")

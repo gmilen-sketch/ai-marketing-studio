@@ -1383,6 +1383,105 @@
             z-index: 5;
             display: none;
         }
+
+        /* Cinema Focus Mode & Precision Creative Inspector */
+        #studio-creative-inspector {
+            position: fixed;
+            top: 48px;
+            right: -460px;
+            width: 440px;
+            bottom: 0;
+            background: rgba(11, 15, 25, 0.95);
+            backdrop-filter: blur(24px);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: -10px 0 50px rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #studio-creative-inspector.inspector-open {
+            right: 0;
+        }
+
+        /* Floating Focus Navigation HUD Pill */
+        #focus-navigation-hud {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(20px);
+            border: 1.5px solid var(--sg-teal);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 168, 143, 0.3);
+            border-radius: 40px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1001;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #focus-navigation-hud.hud-active {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .hud-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .hud-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: var(--sg-green);
+            color: var(--sg-green);
+            transform: translateY(-1px);
+        }
+
+        .hud-btn-primary {
+            background: linear-gradient(135deg, var(--sg-green), var(--sg-teal));
+            color: #0f172a;
+            border: none;
+            box-shadow: 0 2px 10px rgba(150, 203, 76, 0.4);
+        }
+
+        .hud-btn-primary:hover {
+            opacity: 0.95;
+            color: #0f172a;
+        }
+
+        .inspector-tab-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .inspector-tab-btn.tab-active {
+            color: #fff;
+            border-bottom-color: var(--sg-green);
+        }
     </style>
 </head>
 <body>
@@ -1571,6 +1670,61 @@
                 <div id="canvas-minimap" onclick="panFromMinimap(event)" title="Canvas Radar: Click to pan view">
                     <canvas id="canvas-minimap-canvas" width="170" height="115"></canvas>
                 </div>
+            </div>
+
+            <!-- RIGHT-SIDE PRECISION CREATIVE INSPECTOR (SLIDE-OVER STUDIO PANEL) -->
+            <aside id="studio-creative-inspector">
+                <!-- Header -->
+                <div style="padding:14px 16px; background:rgba(15,23,42,0.95); border-bottom:1px solid rgba(255,255,255,0.12); display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span id="inspector-node-icon" style="font-size:1.15rem;">🖼️</span>
+                        <div>
+                            <div id="inspector-node-title" style="font-weight:800; font-size:0.88rem; color:#fff;">Creative Studio Inspector</div>
+                            <div id="inspector-node-sub" style="font-size:0.68rem; color:var(--sg-teal);">Precision Layer & Parameter Tuning</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <button class="btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="exitFocusMode()" title="Exit Focus Mode (Esc)">✕ Close</button>
+                    </div>
+                </div>
+
+                <!-- Content Area (Scrollable Dynamic Body) -->
+                <div id="inspector-body-content" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:14px;">
+                    <!-- Dynamically populated per node type -->
+                </div>
+
+                <!-- Sticky Bottom Action Footer -->
+                <div style="padding:12px 16px; background:rgba(15,23,42,0.95); border-top:1px solid rgba(255,255,255,0.12); display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-primary" id="btn-inspector-apply" style="flex:2; font-size:0.8rem; font-weight:700; background:linear-gradient(135deg,var(--sg-green),var(--sg-teal));" onclick="applyInspectorChanges()">
+                            ✨ Apply & Fork Version (v2)
+                        </button>
+                        <button class="btn-secondary" id="btn-inspector-propagate" style="flex:1; font-size:0.75rem;" onclick="propagateInspectorToDownstream()" title="Propagate changes to connected downstream nodes">
+                            🔄 Sync Kids
+                        </button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:var(--text-muted);">
+                        <span>Shortcuts: <b>[</b> Prev | <b>]</b> Next | <b>Esc</b> Overview</span>
+                        <span id="inspector-node-version-tag">Version: v1 (Active)</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- FLOATING BOTTOM FOCUS NAVIGATION HUD PILL -->
+            <div id="focus-navigation-hud">
+                <button class="hud-btn" onclick="focusPrevNode()" title="Previous Node ( [ )">
+                    <span>◀</span> Prev <span style="opacity:0.6; font-size:0.65rem;">[</span>
+                </button>
+                <div style="display:flex; align-items:center; gap:8px; padding:0 8px; border-left:1px solid rgba(255,255,255,0.15); border-right:1px solid rgba(255,255,255,0.15);">
+                    <span id="hud-node-badge" style="font-size:0.75rem; font-weight:700; color:var(--sg-green);">🖼️ Image Asset</span>
+                    <span id="hud-index-badge" style="font-size:0.68rem; color:var(--text-muted); background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:10px;">1 / 5</span>
+                </div>
+                <button class="hud-btn hud-btn-primary" onclick="exitFocusMode()" title="Zoom Out to Canvas Overview (Esc)">
+                    🔍 Overview <span style="opacity:0.6; font-size:0.65rem;">Esc</span>
+                </button>
+                <button class="hud-btn" onclick="focusNextNode()" title="Next Node ( ] )">
+                    Next <span style="opacity:0.6; font-size:0.65rem;">]</span> <span>▶</span>
+                </button>
             </div>
         </div>
 
@@ -2016,7 +2170,7 @@
                     const activeTab = node.data.activeTab || 'brief';
 
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:440px; border:1.5px solid var(--sg-green); box-shadow:0 8px 32px rgba(150,203,76,0.25);">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" ondblclick="enterFocusMode('${node.id}')" style="left:${node.x}px; top:${node.y}px; width:440px; border:1.5px solid var(--sg-green); box-shadow:0 8px 32px rgba(150,203,76,0.25);">
                             <div class="node-port node-port-out port-type-prompt" data-node-id="${node.id}" data-port-type="prompt" onmousedown="startWireDrag('${node.id}', 'prompt', event)" title="Click or Drag to Generate Strategic Narratives" style="top:50%;">🚀</div>
                             <div class="canvas-node-header" onmousedown="startNodeDrag(event, '${node.id}')" style="background:linear-gradient(135deg,rgba(150,203,76,0.3),rgba(15,23,42,0.95));">
                                 <div style="display:flex; align-items:center; gap:8px;">
@@ -2027,6 +2181,7 @@
                                     </div>
                                 </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
+                                    <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:var(--sg-green); font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
                                     <input type="checkbox" ${checkChecked} onclick="toggleNodeSelection('${node.id}', event)">
                                     <button style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.85rem;" onclick="removeCanvasNode('${node.id}')" title="Remove Launcher">❌</button>
@@ -2143,7 +2298,7 @@
                     };
 
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:${node.width || 450}px; min-width:380px; max-width:720px; resize:both;" onclick="if(!event.target.closest('button, input, select, textarea, .tab-btn')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" ondblclick="enterFocusMode('${node.id}')" style="left:${node.x}px; top:${node.y}px; width:${node.width || 450}px; min-width:380px; max-width:720px; resize:both;" onclick="if(!event.target.closest('button, input, select, textarea, .tab-btn')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
                             <div class="node-port node-port-in port-type-prompt" data-node-id="${node.id}" data-port-type="prompt" onmouseup="finishWireConnect('${node.id}', event)" title="Prompt Input Socket" style="top:50%;">📝</div>
                             <div class="node-port node-port-out port-type-image" data-node-id="${node.id}" data-port-type="image" onmousedown="startWireDrag('${node.id}', 'image', event)" title="Click or Drag to Spawn Image Asset" style="top:30%;">🖼️</div>
                             <div class="node-port node-port-out port-type-audio" data-node-id="${node.id}" data-port-type="audio" onmousedown="startWireDrag('${node.id}', 'audio', event)" title="Click or Drag to Spawn Audio Narration" style="top:50%;">🎙️</div>
@@ -2151,8 +2306,9 @@
                             <div class="canvas-node-header" onmousedown="startNodeDrag(event, '${node.id}')">
                                 <span style="font-size:0.75rem; font-weight:700;">📝 ${node.data.title}</span>
                                 <div style="display:flex; align-items:center; gap:6px;">
-                                    <button onclick="event.stopPropagation(); toggleNarrativeZoom('${node.id}')" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:0.75rem;" title="Zoom / Expand Document View">🔍 Zoom</button>
-                                    <button onclick="event.stopPropagation(); toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Collapse">⤢</button>
+                                    <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:#38bdf8; font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
+                                    <button onclick="event.stopPropagation(); toggleNarrativeZoom('${node.id}')" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:0.75rem;" title="Zoom / Expand Document View">⤢ View</button>
+                                    <button onclick="event.stopPropagation(); toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Collapse">_</button>
                                     <label style="display:flex; align-items:center; gap:3px; font-size:0.72rem; cursor:pointer;" onclick="event.stopPropagation();">
                                         <input type="checkbox" ${checkChecked} onclick="event.stopPropagation(); toggleNodeSelection('${node.id}', event)"> Select
                                     </label>
@@ -2269,7 +2425,7 @@
                     const langLabels = { 'en-US': '🇺🇸 English (US)', 'es-ES': '🇪🇸 Spanish (Español)', 'de-DE': '🇩🇪 German (Deutsch)', 'fr-FR': '🇫🇷 French (Français)', 'it-IT': '🇮🇹 Italian (Italiano)', 'pt-BR': '🇧🇷 Portuguese (Brasil)', 'bg-BG': '🇧🇬 Bulgarian (Български)', 'ja-JP': '🇯🇵 Japanese (日本語)' };
 
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:480px; border:1.5px solid var(--sg-teal); box-shadow:0 8px 32px rgba(0, 168, 143, 0.35);">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" ondblclick="enterFocusMode('${node.id}')" style="left:${node.x}px; top:${node.y}px; width:480px; border:1.5px solid var(--sg-teal); box-shadow:0 8px 32px rgba(0, 168, 143, 0.35);">
                             <div class="node-port node-port-in port-type-image" data-node-id="${node.id}" data-port-type="image" onmouseup="finishWireConnect('${node.id}', event)" title="Image Asset Input Socket" style="top:50%;">🖼️</div>
                             <div class="node-port node-port-out port-type-video" data-node-id="${node.id}" data-port-type="video" onmousedown="startWireDrag('${node.id}', 'video', event)" title="Connect to Video Combiner" style="top:50%;">⚡</div>
                             
@@ -2282,6 +2438,7 @@
                                     </div>
                                 </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
+                                    <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:var(--sg-teal); font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
                                     <button style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.85rem;" onclick="removeCanvasNode('${node.id}')" title="Remove Matrix">❌</button>
                                 </div>
@@ -2444,7 +2601,7 @@
                     const gazeActive = node.data.showGaze ? 'border:2px solid #ec4899; box-shadow:0 0 20px rgba(236,72,153,0.5);' : '';
 
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:400px; ${gazeActive}" onclick="if(!event.target.closest('button, input, select, textarea, a')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" ondblclick="enterFocusMode('${node.id}')" style="left:${node.x}px; top:${node.y}px; width:400px; ${gazeActive}" onclick="if(!event.target.closest('button, input, select, textarea, a')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
                             <div class="node-port node-port-in port-type-prompt" data-node-id="${node.id}" data-port-type="prompt" onmouseup="finishWireConnect('${node.id}', event)" title="Prompt Input Socket" style="top:50%;">📝</div>
                             <div class="node-port node-port-out port-type-image" data-node-id="${node.id}" data-port-type="image" onmousedown="startWireDrag('${node.id}', 'image', event)" title="Image Stream Output" style="top:35%;">🖼️</div>
                             <div class="node-port node-port-out port-type-video" data-node-id="${node.id}" data-port-type="video" onmousedown="startWireDrag('${node.id}', 'video', event)" title="8s Video Stream Output" style="top:65%;">📹</div>
@@ -2457,6 +2614,7 @@
                                     </select>
                                 </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
+                                    <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:#38bdf8; font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
                                     <label style="display:flex; align-items:center; gap:3px; font-size:0.72rem; cursor:pointer;">
                                         <input type="checkbox" ${checkChecked} onclick="toggleNodeSelection('${node.id}', event)"> Select
@@ -2509,12 +2667,13 @@
                     `;
                 } else if (node.type === 'clip') {
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:360px;" onclick="if(!event.target.closest('button, input, select, textarea')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" ondblclick="enterFocusMode('${node.id}')" style="left:${node.x}px; top:${node.y}px; width:360px;" onclick="if(!event.target.closest('button, input, select, textarea')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
                             <div class="node-port node-port-in port-type-image" data-node-id="${node.id}" data-port-type="image" onmouseup="finishWireConnect('${node.id}', event)" title="Image Input Socket" style="top:50%;">🖼️</div>
                             <div class="node-port node-port-out port-type-video" data-node-id="${node.id}" data-port-type="video" onmousedown="startWireDrag('${node.id}', 'video', event)" title="Video Output Socket" style="top:50%;">📹</div>
                             <div class="canvas-node-header" onmousedown="startNodeDrag(event, '${node.id}')">
                                 <span>🎬 Video Clip (${node.data.duration || '8.0s'})</span>
                                 <div style="display:flex; align-items:center; gap:6px;">
+                                    <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:#38bdf8; font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
                                     <label style="display:flex; align-items:center; gap:3px; font-size:0.72rem; cursor:pointer;">
                                         <input type="checkbox" ${checkChecked} onclick="toggleNodeSelection('${node.id}', event)"> Select
@@ -2542,12 +2701,13 @@
                 } else if (node.type === 'audio') {
                     const currentLang = node.data.language || 'en-US';
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:360px; border:1.5px solid var(--sg-teal);" onclick="if(!event.target.closest('button, input, select, textarea')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" ondblclick="enterFocusMode('${node.id}')" style="left:${node.x}px; top:${node.y}px; width:360px; border:1.5px solid var(--sg-teal);" onclick="if(!event.target.closest('button, input, select, textarea')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
                             <div class="node-port node-port-in port-type-prompt" data-node-id="${node.id}" data-port-type="prompt" onmouseup="finishWireConnect('${node.id}', event)" title="Script Input Socket" style="top:50%;">📝</div>
                             <div class="node-port node-port-out port-type-audio" data-node-id="${node.id}" data-port-type="audio" onmousedown="startWireDrag('${node.id}', 'audio', event)" title="Audio Output Socket" style="top:50%;">🎙️</div>
                             <div class="canvas-node-header" style="background:linear-gradient(135deg,rgba(56,189,248,0.25),rgba(16,185,129,0.25));" onmousedown="startNodeDrag(event, '${node.id}')">
                                 <span>🎙️ Audio Narration (${currentLang})</span>
                                 <div style="display:flex; align-items:center; gap:6px;">
+                                    <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:#c084fc; font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
                                     <label style="display:flex; align-items:center; gap:3px; font-size:0.72rem; cursor:pointer;">
                                         <input type="checkbox" ${checkChecked} onclick="toggleNodeSelection('${node.id}', event)"> Select
@@ -2623,7 +2783,7 @@
                     }
 
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:460px; min-width:360px; min-height:340px; border:2px solid var(--sg-green);" onclick="if(!event.target.closest('button, input, select, textarea, a')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" ondblclick="enterFocusMode('${node.id}')" style="left:${node.x}px; top:${node.y}px; width:460px; min-width:360px; min-height:340px; border:2px solid var(--sg-green);" onclick="if(!event.target.closest('button, input, select, textarea, a')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
                             <!-- Multiple Dedicated Input Sockets (Magnific AI style) -->
                             <div class="node-port node-port-in port-type-video" data-node-id="${node.id}" data-port-slot="video_1" onmouseup="finishWireConnect('${node.id}', event)" title="Video Stream Input 1" style="top:22%;">📹</div>
                             <div class="node-port node-port-in port-type-video" data-node-id="${node.id}" data-port-slot="video_2" onmouseup="finishWireConnect('${node.id}', event)" title="Video Stream Input 2" style="top:42%;">📹</div>
@@ -2633,6 +2793,7 @@
                             <div class="canvas-node-header" style="background:linear-gradient(135deg,rgba(150,203,76,0.35),rgba(56,189,248,0.35));" onmousedown="startNodeDrag(event, '${node.id}')">
                                 <span>⚡ Video Combiner & Master Ad (${node.data.version || 'v1'})</span>
                                 <div style="display:flex; align-items:center; gap:6px;">
+                                    <button onclick="event.stopPropagation(); enterFocusMode('${node.id}')" style="background:none; border:none; color:var(--sg-green); font-weight:700; cursor:pointer; font-size:0.75rem;" title="Zoom in & Focus (F)">🔍 Focus</button>
                                     <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Expand">⤢</button>
                                     <label style="display:flex; align-items:center; gap:3px; font-size:0.72rem; cursor:pointer;">
                                         <input type="checkbox" ${checkChecked} onclick="toggleNodeSelection('${node.id}', event)"> Select
@@ -6293,6 +6454,498 @@
                 console.error("BigQuery dynamic RAG error:", e);
             }
         }
+
+        // ====================================================================
+        // 🎬 CINEMA FOCUS MODE & PRECISION CREATIVE INSPECTOR ENGINE
+        // ====================================================================
+        let isFocusMode = false;
+        let focusedNodeId = null;
+
+        function enterFocusMode(nodeId) {
+            let node = canvasNodes.find(n => n.id === nodeId);
+            if (!node) {
+                if (canvasNodes.length > 0) node = canvasNodes[0];
+                else return;
+            }
+
+            isFocusMode = true;
+            focusedNodeId = node.id;
+            selectedNodeIds.clear();
+            selectedNodeIds.add(node.id);
+
+            // 1. Calculate Cinema Glide Camera Positioning (offset for 440px right inspector)
+            const nodeW = node.width || (node.type === 'expansion_matrix' ? 480 : (node.type === 'image' ? 400 : 420));
+            const nodeH = 340;
+            const targetZoom = 1.30;
+            const availableW = window.innerWidth - 440;
+            const centerX = availableW / 2;
+            const centerY = window.innerHeight / 2;
+
+            canvasZoom = targetZoom;
+            canvasPanX = centerX - (node.x + nodeW / 2) * canvasZoom;
+            canvasPanY = centerY - (node.y + nodeH / 2) * canvasZoom;
+            updateCanvasTransform();
+            renderCanvasNodes();
+
+            // 2. Open Floating Navigation HUD Pill
+            const hud = document.getElementById('focus-navigation-hud');
+            if (hud) {
+                hud.classList.add('hud-active');
+                const idx = canvasNodes.findIndex(n => n.id === node.id);
+                const nodeTypeIcons = {
+                    launcher: '🎯 Brief Launcher',
+                    narrative: '📝 Strategic Hook',
+                    image: '🖼️ Image Asset',
+                    clip: '🎬 8s Video Clip',
+                    audio: '🎙️ Audio Narration',
+                    expansion_matrix: '⚡ 50+ Matrix',
+                    master_video: '⚡ Master Ad Combiner'
+                };
+                document.getElementById('hud-node-badge').innerText = `${nodeTypeIcons[node.type] || 'Component'}`;
+                document.getElementById('hud-index-badge').innerText = `${idx + 1} / ${canvasNodes.length}`;
+            }
+
+            // 3. Open Slide-Over Studio Inspector Drawer & Populate Controls
+            const inspector = document.getElementById('studio-creative-inspector');
+            if (inspector) {
+                inspector.classList.add('inspector-open');
+                populateInspectorForNode(node);
+            }
+        }
+
+        function exitFocusMode() {
+            isFocusMode = false;
+            focusedNodeId = null;
+
+            const hud = document.getElementById('focus-navigation-hud');
+            if (hud) hud.classList.remove('hud-active');
+
+            const inspector = document.getElementById('studio-creative-inspector');
+            if (inspector) inspector.classList.remove('inspector-open');
+
+            // Smooth return to overview
+            canvasZoom = 1.0;
+            canvasPanX = 60;
+            canvasPanY = 40;
+            updateCanvasTransform();
+            renderCanvasNodes();
+        }
+
+        function focusNextNode() {
+            if (canvasNodes.length === 0) return;
+            const curIdx = canvasNodes.findIndex(n => n.id === focusedNodeId);
+            const nextIdx = (curIdx + 1) % canvasNodes.length;
+            enterFocusMode(canvasNodes[nextIdx].id);
+        }
+
+        function focusPrevNode() {
+            if (canvasNodes.length === 0) return;
+            const curIdx = canvasNodes.findIndex(n => n.id === focusedNodeId);
+            const prevIdx = (curIdx - 1 + canvasNodes.length) % canvasNodes.length;
+            enterFocusMode(canvasNodes[prevIdx].id);
+        }
+
+        function populateInspectorForNode(node) {
+            const iconEl = document.getElementById('inspector-node-icon');
+            const titleEl = document.getElementById('inspector-node-title');
+            const subEl = document.getElementById('inspector-node-sub');
+            const bodyEl = document.getElementById('inspector-body-content');
+            const verTag = document.getElementById('inspector-node-version-tag');
+
+            const currentVer = node.data?.version || (node.data?.versions ? `v${(node.data.currentVersionIdx || 0) + 1}` : 'v1');
+            if (verTag) verTag.innerText = `Active Version: ${currentVer}`;
+
+            // Reset body
+            bodyEl.innerHTML = '';
+
+            // -------------------------------------------------------------
+            // CASE 1: IMAGE ASSET NODE
+            // -------------------------------------------------------------
+            if (node.type === 'image') {
+                if (iconEl) iconEl.innerText = '🖼️';
+                if (titleEl) titleEl.innerText = 'Visual Banner Creative Suite';
+                if (subEl) subEl.innerText = 'Typography, Color Palettes, Inpainting & Multi-Format Outpainting';
+
+                bodyEl.innerHTML = `
+                    <!-- 1. Live Preview Screen with Zoom / Inspection -->
+                    <div style="background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:6px; position:relative; overflow:hidden;">
+                        <img id="inspector-preview-img" src="${node.data.file_path}" style="width:100%; height:200px; object-fit:contain; border-radius:6px; background:#000;">
+                        <div style="position:absolute; top:12px; right:12px; display:flex; gap:4px;">
+                            <span class="badge badge-teal" style="font-size:0.65rem;">1200 × 800 HD</span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Direct Typography & Copywriting Tweaker -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green); display:flex; justify-content:space-between;">
+                            <span>✍️ Typography & Text Layer Controls</span>
+                            <span style="font-size:0.65rem; color:var(--text-muted);">Real-time re-composite</span>
+                        </div>
+                        <div>
+                            <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Headline Text:</label>
+                            <input type="text" id="insp-headline" value="${escapeHtml(node.data.headline || 'SiteGround 3X Speed Boost')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Sub-Headline / Badge:</label>
+                            <input type="text" id="insp-subhead" value="${escapeHtml(node.data.subtitle || 'Ultra-Fast Google Cloud NVMe Storage')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.68rem; color:var(--text-sub); font-weight:700;">Call To Action (Button Text):</label>
+                            <input type="text" id="insp-cta" value="${escapeHtml(node.data.cta || 'GET 80% OFF TODAY')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                        </div>
+                    </div>
+
+                    <!-- 3. Brand Color Harmony & Atmospheric Glow -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:#38bdf8;">🎨 Color Harmony & Lighting Atmosphere</div>
+                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px;">
+                            <button type="button" class="topbar-btn" style="height:26px; font-size:0.68rem; padding:0 2px;" onclick="inspectorSetPalette('green')">🟢 Green</button>
+                            <button type="button" class="topbar-btn" style="height:26px; font-size:0.68rem; padding:0 2px;" onclick="inspectorSetPalette('emerald')">🌊 Obsidian</button>
+                            <button type="button" class="topbar-btn" style="height:26px; font-size:0.68rem; padding:0 2px;" onclick="inspectorSetPalette('white')">⚪ White</button>
+                            <button type="button" class="topbar-btn" style="height:26px; font-size:0.68rem; padding:0 2px;" onclick="inspectorSetPalette('cyan')">⚡ Cyan</button>
+                        </div>
+                    </div>
+
+                    <!-- 4. Multi-Format Outpainting (5 Ratios) -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:#c084fc;">📐 Multi-Ratio Outpainting (Gemini 3.1)</div>
+                        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:4px; text-align:center;">
+                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('16:9')">16:9</button>
+                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('9:16')">9:16</button>
+                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('1:1')">1:1</button>
+                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('4:1')">4:1</button>
+                            <button class="topbar-btn" style="height:24px; font-size:0.65rem;" onclick="inspectorSetRatio('1.91:1')">1.91:1</button>
+                        </div>
+                    </div>
+                `;
+            }
+            // -------------------------------------------------------------
+            // CASE 2: AUDIO NARRATION NODE
+            // -------------------------------------------------------------
+            else if (node.type === 'audio') {
+                if (iconEl) iconEl.innerText = '🎙️';
+                if (titleEl) titleEl.innerText = 'Voiceover Audio Precision Suite';
+                if (subEl) subEl.innerText = 'SSML Scripting, Persona Tuning, Speech Rate & Pitch Dynamics';
+
+                const scriptVal = node.data.ssml_parsed || node.data.prompt || 'Switch to SiteGround today for 3X faster Google Cloud hosting infrastructure!';
+
+                bodyEl.innerHTML = `
+                    <!-- 1. Live Audio Player Stream -->
+                    <div style="background:rgba(3,7,18,0.95); border:1px solid rgba(168,85,247,0.3); border-radius:10px; padding:12px;">
+                        <audio id="inspector-audio-player" src="${node.data.audio_url}" controls style="width:100%; border-radius:6px;"></audio>
+                    </div>
+
+                    <!-- 2. SSML Script Editor & Quick Insert Buttons -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="font-size:0.75rem; font-weight:800; color:#c084fc;">🎙️ Script & SSML Editor:</label>
+                            <div style="display:flex; gap:3px;">
+                                <button type="button" class="fab-btn fab-btn-secondary" style="height:20px; font-size:0.62rem; padding:0 5px;" onclick="inspectorInsertSSML('<break time=\"500ms\"/>')">+ Break</button>
+                                <button type="button" class="fab-btn fab-btn-secondary" style="height:20px; font-size:0.62rem; padding:0 5px;" onclick="inspectorInsertSSML('<emphasis level=\"strong\">')">+ Emphasize</button>
+                            </div>
+                        </div>
+                        <textarea id="insp-audio-script" style="width:100%; height:90px; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:8px; font-size:0.78rem; font-family:'Outfit',sans-serif; box-sizing:border-box;">${escapeHtml(scriptVal)}</textarea>
+                    </div>
+
+                    <!-- 3. Voice Persona & Speech Characteristics -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">⚡ Voice Persona & Energy Preset</div>
+                        <select id="insp-voice-persona" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
+                            <option value="en-US-Journey-F" selected>⚡ Energetic Growth Host (High Energy • High Conv)</option>
+                            <option value="en-US-Standard-C">🛡️ Authoritative Cloud Engineer (Deep Technical Authority)</option>
+                            <option value="en-US-Wavenet-D">💼 Calm Executive Consultant (B2B Precision)</option>
+                            <option value="en-US-Journey-O">📖 Warm Storyteller (Authentic Brand Connection)</option>
+                        </select>
+                    </div>
+
+                    <!-- 4. Speed & Pitch Sliders -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="font-size:0.72rem; color:var(--text-sub); font-weight:700;">Speech Rate / Pacing:</span>
+                            <span id="insp-rate-val" style="font-size:0.72rem; color:var(--sg-green); font-weight:700;">1.05x (Optimal Ad Pacing)</span>
+                        </div>
+                        <input type="range" id="insp-audio-rate" min="0.8" max="1.3" step="0.05" value="1.05" oninput="document.getElementById('insp-rate-val').innerText = this.value + 'x'" style="width:100%;">
+                    </div>
+                `;
+            }
+            // -------------------------------------------------------------
+            // CASE 3: VIDEO CLIP NODE
+            // -------------------------------------------------------------
+            else if (node.type === 'clip') {
+                if (iconEl) iconEl.innerText = '🎬';
+                if (titleEl) titleEl.innerText = '8s Motion Video Clip Suite';
+                if (subEl) subEl.innerText = 'Veo 3.1 Dynamics, Pan Direction, Speed Easing & Typography Lower-Thirds';
+
+                bodyEl.innerHTML = `
+                    <!-- 1. Live Video Player -->
+                    <div style="background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:10px; overflow:hidden;">
+                        <video id="inspector-video-player" src="${node.data.video_url || ''}" controls style="width:100%; height:200px; object-fit:contain; background:#000;"></video>
+                    </div>
+
+                    <!-- 2. Motion Direction & Ken Burns Dynamics -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:#38bdf8;">🎥 Camera Movement & Pan Dynamics</div>
+                        <select id="insp-motion-dir" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
+                            <option value="ken_burns_zoom_in" selected>🔍 Center Zoom In (1.00x ➔ 1.15x Smooth Easing)</option>
+                            <option value="pan_left_right">➡️ Dynamic Left-to-Right Panoramic Sweep</option>
+                            <option value="tilt_up">⬆️ Upward Tilt Over Performance Metrics</option>
+                            <option value="cinematic_drift">🌌 3D Cinematic Drift with Particle Glow</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. Subtitle / Lower-Third Overlay Banner -->
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">🏷️ Lower-Third Subtitle & Kinetic Caption:</label>
+                        <input type="text" id="insp-video-caption" value="${escapeHtml(node.data.prompt || 'SiteGround 3X SuperCacher Speed Boost')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem; box-sizing:border-box;">
+                    </div>
+                `;
+            }
+            // -------------------------------------------------------------
+            // CASE 4: NARRATIVE SCRIPT NODE
+            // -------------------------------------------------------------
+            else if (node.type === 'narrative') {
+                if (iconEl) iconEl.innerText = '📝';
+                if (titleEl) titleEl.innerText = 'Strategic Narrative Hook Suite';
+                if (subEl) subEl.innerText = 'PAS Framework, Hook Text, Audience Objection & ABCD Video Scenes';
+
+                const rawV = node.data.rawVariant || {};
+                const hookText = rawV.hook_breakdown?.hook_text || node.data.hook_text || 'Stop losing store sales due to slow server response times.';
+
+                bodyEl.innerHTML = `
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:0.75rem; font-weight:800; color:#38bdf8;">🎯 Attention Hook Text:</label>
+                        <textarea id="insp-hook-text" style="width:100%; height:75px; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:8px; font-size:0.78rem; font-family:'Outfit',sans-serif; box-sizing:border-box;">${escapeHtml(hookText)}</textarea>
+                    </div>
+
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">🧠 Audience Psychological Trigger</div>
+                        <select id="insp-hook-trigger" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:6px; font-size:0.78rem;">
+                            <option value="loss_aversion" selected>🔴 Loss Aversion (Fear of lost sales & revenue at 2AM)</option>
+                            <option value="competitive_advantage">⚡ Competitive Velocity (Outranking slower competitors)</option>
+                            <option value="authority_trust">🛡️ Google Cloud Authority & 4.9 Trustpilot Rating</option>
+                            <option value="irresistible_deal">🏷️ 80% Off Promotional Blitz</option>
+                        </select>
+                    </div>
+
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:6px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:#c084fc;">📋 PAS Framework Breakdown</div>
+                        <div>
+                            <span style="font-size:0.68rem; color:#fca5a5; font-weight:700;">Problem:</span>
+                            <input type="text" id="insp-pas-p" value="${escapeHtml(rawV.hook_breakdown?.pas_framework?.problem || '500 Server Errors during flash traffic spikes.')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:4px; padding:4px 6px; font-size:0.72rem; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <span style="font-size:0.68rem; color:#fde047; font-weight:700;">Solution:</span>
+                            <input type="text" id="insp-pas-s" value="${escapeHtml(rawV.hook_breakdown?.pas_framework?.solution || 'SiteGround 190ms TTFB NVMe storage with 99.99% uptime.')}" style="width:100%; background:rgba(3,7,18,0.9); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:4px; padding:4px 6px; font-size:0.72rem; box-sizing:border-box;">
+                        </div>
+                    </div>
+                `;
+            }
+            // -------------------------------------------------------------
+            // CASE 5: 50+ MULTIVARIATE MATRIX
+            // -------------------------------------------------------------
+            else if (node.type === 'expansion_matrix') {
+                if (iconEl) iconEl.innerText = '⚡';
+                if (titleEl) titleEl.innerText = '50+ Multivariate Matrix Explorer';
+                if (subEl) subEl.innerText = 'Deep Batch Exporter & PMax Asset Group Manager';
+
+                bodyEl.innerHTML = `
+                    <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--sg-green);">🌐 Active Dimensions</div>
+                        <div style="font-size:0.75rem; line-height:1.5; color:#fff;">
+                            • <b>4 Palettes</b>: Signature Green, Deep Obsidian, Studio White, Cyber Cyan<br>
+                            • <b>8 Locales</b>: US, ES, DE, FR, IT, BR, BG, JA<br>
+                            • <b>3 Formats</b>: 16:9 Desktop, 9:16 Shorts, 1:1 Social
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="width:100%; font-weight:700; background:linear-gradient(135deg,var(--sg-green),var(--sg-teal));" onclick="bulkDeploy50Variations('${node.id}')">
+                        🚀 Push All 50 Bundles to Google Ads PMax v17
+                    </button>
+                `;
+            }
+            // -------------------------------------------------------------
+            // CASE 6: MASTER VIDEO COMBINER
+            // -------------------------------------------------------------
+            else if (node.type === 'master_video') {
+                if (iconEl) iconEl.innerText = '⚡';
+                if (titleEl) titleEl.innerText = 'Master Video Combiner & Stitcher';
+                if (subEl) subEl.innerText = 'Multi-Stream Timeline Synthesizer & PMax Deployment';
+
+                bodyEl.innerHTML = `
+                    <div style="background:rgba(3,7,18,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:10px; overflow:hidden;">
+                        <video src="${node.data.video_url || ''}" controls style="width:100%; height:200px; object-fit:contain; background:#000;"></video>
+                    </div>
+                    <button class="btn-primary" style="width:100%; font-weight:700; background:linear-gradient(135deg,var(--sg-green),var(--sg-teal));" onclick="stitchSelectedConnectedClips('${node.id}')">
+                        ⚡ Stitch All Connected Streams
+                    </button>
+                `;
+            }
+        }
+
+        function inspectorSetPalette(palKey) {
+            if (!focusedNodeId) return;
+            const node = canvasNodes.find(n => n.id === focusedNodeId);
+            if (node) {
+                if (node.type === 'expansion_matrix') {
+                    node.data.active_palette = palKey;
+                    renderCanvasNodes();
+                    populateInspectorForNode(node);
+                } else if (node.type === 'image') {
+                    const palPrompts = {
+                        green: 'SiteGround brand signature emerald green with gold stars',
+                        emerald: 'Deep obsidian navy blue background with emerald glowing streaks',
+                        white: 'Clean crisp studio white background with bold typography',
+                        cyan: 'Cyberpunk high-contrast cyan with speed benchmarks'
+                    };
+                    quickReskinPalette(node.id, palPrompts[palKey] || palKey);
+                    setTimeout(() => {
+                        const updatedNode = canvasNodes.find(n => n.id === focusedNodeId);
+                        if (updatedNode) populateInspectorForNode(updatedNode);
+                    }, 500);
+                }
+            }
+        }
+
+        function inspectorSetRatio(ratio) {
+            if (!focusedNodeId) return;
+            const node = canvasNodes.find(n => n.id === focusedNodeId);
+            if (node) {
+                if (node.type === 'expansion_matrix') {
+                    node.data.active_ratio = ratio;
+                    renderCanvasNodes();
+                    populateInspectorForNode(node);
+                }
+            }
+        }
+
+        function inspectorInsertSSML(tag) {
+            const textarea = document.getElementById('insp-audio-script');
+            if (!textarea) return;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const val = textarea.value;
+            textarea.value = val.substring(0, start) + tag + val.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + tag.length;
+        }
+
+        function applyInspectorChanges() {
+            if (!focusedNodeId) return;
+            const node = canvasNodes.find(n => n.id === focusedNodeId);
+            if (!node) return;
+
+            // 1. Gather modified fields based on node type
+            if (node.type === 'image') {
+                const hl = document.getElementById('insp-headline')?.value;
+                const sub = document.getElementById('insp-subhead')?.value;
+                const cta = document.getElementById('insp-cta')?.value;
+                if (hl) node.data.headline = hl;
+                if (sub) node.data.subtitle = sub;
+                if (cta) node.data.cta = cta;
+            } else if (node.type === 'audio') {
+                const scriptVal = document.getElementById('insp-audio-script')?.value;
+                if (scriptVal) node.data.ssml_parsed = scriptVal;
+            } else if (node.type === 'clip') {
+                const captionVal = document.getElementById('insp-video-caption')?.value;
+                if (captionVal) node.data.prompt = captionVal;
+            } else if (node.type === 'narrative') {
+                const hookVal = document.getElementById('insp-hook-text')?.value;
+                if (hookVal) {
+                    node.data.hook_text = hookVal;
+                    if (node.data.rawVariant && node.data.rawVariant.hook_breakdown) {
+                        node.data.rawVariant.hook_breakdown.hook_text = hookVal;
+                    }
+                }
+            }
+
+            // 2. Fork New Version
+            if (!node.data.versions) {
+                node.data.versions = [{ ver: 'v1', url: node.data.file_path || node.data.video_url || '', prompt: node.data.prompt || '' }];
+            }
+            const newVerNumber = node.data.versions.length + 1;
+            const newVerTag = `v${newVerNumber}`;
+            node.data.versions.push({
+                ver: newVerTag,
+                url: node.data.file_path || node.data.video_url || '',
+                prompt: node.data.prompt || '',
+                timestamp: Date.now()
+            });
+            node.data.currentVersionIdx = node.data.versions.length - 1;
+            node.data.version = newVerTag;
+
+            renderCanvasNodes();
+            populateInspectorForNode(node);
+
+            // Toast feedback
+            appendBotChatMessage(`
+                <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">✨ Applied & Forked ${newVerTag}</div>
+                <p style="margin:4px 0 0 0; font-size:0.8rem;">Saved precision parameter changes to active card version.</p>
+            `);
+        }
+
+        function propagateInspectorToDownstream() {
+            if (!focusedNodeId) return;
+            const children = canvasNodes.filter(n => (n.parentIds || []).includes(focusedNodeId));
+            if (children.length === 0) {
+                alert("ℹ️ No connected downstream cards to synchronize.");
+                return;
+            }
+
+            const parentNode = canvasNodes.find(n => n.id === focusedNodeId);
+            children.forEach(child => {
+                if (child.type === 'clip' && parentNode.type === 'image') {
+                    child.data.prompt = `Motion: ${parentNode.data.prompt || parentNode.data.headline || ''}`;
+                } else if (child.type === 'expansion_matrix' && parentNode.type === 'image') {
+                    child.data.base_image = parentNode.data.file_path;
+                }
+            });
+            renderCanvasNodes();
+
+            appendBotChatMessage(`
+                <div style="font-weight:700; color:var(--sg-teal); font-size:0.78rem;">🔄 Synchronized ${children.length} Downstream Cards</div>
+                <p style="margin:4px 0 0 0; font-size:0.8rem;">Propagated updated assets and prompts to all connected child nodes on canvas.</p>
+            `);
+        }
+
+        // ====================================================================
+        // ⌨️ GLOBAL KEYBOARD SHORTCUTS FOR WORKBENCH & FOCUS NAVIGATION
+        // ====================================================================
+        window.addEventListener('keydown', (e) => {
+            const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+                if (e.key === 'Escape') {
+                    document.activeElement.blur();
+                }
+                return;
+            }
+
+            // '[' -> Previous Node
+            if (e.key === '[') {
+                e.preventDefault();
+                if (!isFocusMode && canvasNodes.length > 0) enterFocusMode(canvasNodes[0].id);
+                else if (isFocusMode) focusPrevNode();
+            }
+            // ']' -> Next Node
+            else if (e.key === ']') {
+                e.preventDefault();
+                if (!isFocusMode && canvasNodes.length > 0) enterFocusMode(canvasNodes[0].id);
+                else if (isFocusMode) focusNextNode();
+            }
+            // 'Escape' -> Exit Focus Mode
+            else if (e.key === 'Escape') {
+                if (isFocusMode) {
+                    e.preventDefault();
+                    exitFocusMode();
+                }
+            }
+            // 'f' or 'F' -> Enter Focus Mode on selected node
+            else if (e.key === 'f' || e.key === 'F') {
+                if (!isFocusMode) {
+                    e.preventDefault();
+                    const targetId = selectedNodeIds.size > 0 ? Array.from(selectedNodeIds)[0] : (canvasNodes.length > 0 ? canvasNodes[0].id : null);
+                    if (targetId) enterFocusMode(targetId);
+                }
+            }
+        });
 
         document.addEventListener("DOMContentLoaded", () => {
             switchProject('proj_wp_speed');
