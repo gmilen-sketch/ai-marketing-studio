@@ -1,8 +1,10 @@
 import asyncio
 import json
 import os
+import re
 import shutil
 import subprocess
+import time
 
 # Ensure global location for Gemini Enterprise / Vertex AI model endpoint resolution
 os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
@@ -1118,35 +1120,156 @@ async def get_ready_videos(project_id: str = None):
     return {"status": "success", "videos": all_vids}
 
 
+@router.post("/assets/upload")
 @router.post("/library/upload")
-async def upload_asset_picture(file: UploadFile = File(...), project_id: str = Form(None)):
-    """Upload custom picture asset attached directly to the active project workspace."""
-    upload_dir = os.path.join(PROJECT_DIR, "uploads")
-    os.makedirs(upload_dir, exist_ok=True)
+async def upload_asset_universal(
+    file: UploadFile = File(...),
+    project_id: str = Form(None),
+    category: str = Form(None),
+    title: str = Form(None)
+):
+    """Upload custom image, video, or audio asset directly to the active project library and media storage."""
+    media_dir = os.path.join(PROJECT_DIR, "media")
+    uploads_dir = os.path.join(PROJECT_DIR, "uploads")
+    os.makedirs(media_dir, exist_ok=True)
+    os.makedirs(uploads_dir, exist_ok=True)
 
-    file_path = os.path.join(upload_dir, file.filename)
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    original_filename = file.filename or "uploaded_asset"
+    ext = os.path.splitext(original_filename)[1].lower()
+    
+    # Classify asset type
+    if ext in [".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif", ".bmp"]:
+        asset_type = "image"
+        def_cat = "Visual Banners"
+    elif ext in [".mp4", ".webm", ".mov", ".mkv", ".avi"]:
+        asset_type = "video"
+        def_cat = "Video Clips"
+    elif ext in [".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac"]:
+        asset_type = "audio"
+        def_cat = "Voiceover Audio"
+    else:
+        asset_type = "image"
+        def_cat = "General Assets"
 
-    media_url = f"/uploads/{file.filename}"
+    clean_base = re.sub(r'[^a-zA-Z0-9_\-.]', '_', original_filename)
+    timestamp = int(time.time())
+    safe_filename = f"upload_{timestamp}_{clean_base}"
+
+    media_target = os.path.join(media_dir, safe_filename)
+    upload_target = os.path.join(uploads_dir, safe_filename)
+
+    file_bytes = await file.read()
+    with open(media_target, "wb") as f_out:
+        f_out.write(file_bytes)
+    try:
+        with open(upload_target, "wb") as f_out2:
+            f_out2.write(file_bytes)
+    except Exception:
+        pass
+
+    file_size_kb = round(len(file_bytes) / 1024, 1)
+    file_url = f"/media/{safe_filename}"
+
+    dim_str = None
+    if asset_type == "image":
+        try:
+            with Image.open(media_target) as img_check:
+                dim_str = f"{img_check.width}x{img_check.height}"
+        except Exception:
+            pass
+
+    asset_title = title or original_filename
     new_asset = {
-        "id": f"asset_user_{int(asyncio.get_event_loop().time())}",
-        "title": file.filename,
-        "category": "User Uploaded",
-        "file_path": media_url,
-        "thumbnail": media_url,
-        "type": "image"
+        "id": f"asset_user_{timestamp}",
+        "title": asset_title,
+        "filename": safe_filename,
+        "category": category or def_cat,
+        "type": asset_type,
+        "file_path": file_url,
+        "thumbnail": file_url if asset_type == "image" else ("/media/asset_supercacher_speed.png" if asset_type == "video" else "/media/voiceover_es-ES_Euterpe.mp3"),
+        "dimensions": dim_str,
+        "size_kb": file_size_kb,
+        "created_at": "Just now"
     }
 
     # Attach to active project workspace
-    if project_id and project_id in PROJECTS_STORE:
-        PROJECTS_STORE[project_id]["assets"].insert(0, new_asset)
-    else:
-        # Default to first project
-        first_proj_id = list(PROJECTS_STORE.keys())[0]
-        PROJECTS_STORE[first_proj_id]["assets"].insert(0, new_asset)
+    active_pid = project_id if (project_id and project_id in PROJECTS_STORE) else list(PROJECTS_STORE.keys())[0]
+    if asset_type == "video":
+        PROJECTS_STORE[active_pid].setdefault("segments", []).insert(0, {
+            "id": f"segment_{timestamp}",
+            "title": asset_title,
+            "duration": "8s",
+            "video_url": file_url,
+            "thumbnail": file_url,
+            "description": f"User uploaded video clip ({file_size_kb} KB)"
+        })
+    
+    PROJECTS_STORE[active_pid].setdefault("assets", []).insert(0, new_asset)
 
-    return {"status": "success", "asset": new_asset, "file_url": media_url}
+    return {
+        "status": "success",
+        "asset": new_asset,
+        "file_url": file_url,
+        "asset_type": asset_type,
+        "title": asset_title
+    }
+
+
+@router.get("/assets")
+@router.get("/library/assets")
+async def list_library_assets(project_id: str = None):
+    """Retrieve full categorized assets library (images, videos, audio, logos)."""
+    active_pid = project_id if (project_id and project_id in PROJECTS_STORE) else list(PROJECTS_STORE.keys())[0]
+    proj = PROJECTS_STORE.get(active_pid, {})
+    
+    assets_list = proj.get("assets", [])
+    segments_list = proj.get("segments", [])
+
+    all_items = []
+    for a in assets_list:
+        all_items.append(a)
+
+    for s in segments_list:
+        if not any(item.get("file_path") == s.get("video_url") for item in all_items):
+            all_items.append({
+                "id": s.get("id"),
+                "title": s.get("title", "Video Segment"),
+                "category": "Motion Video",
+                "type": "video",
+                "file_path": s.get("video_url"),
+                "thumbnail": s.get("video_url"),
+                "duration": s.get("duration", "8s"),
+                "created_at": "Ready"
+            })
+
+    images = [item for item in all_items if item.get("type") == "image"]
+    videos = [item for item in all_items if item.get("type") == "video"]
+    audios = [item for item in all_items if item.get("type") == "audio"]
+
+    return {
+        "status": "success",
+        "total_count": len(all_items),
+        "assets": {
+            "all": all_items,
+            "images": images,
+            "videos": videos,
+            "audios": audios
+        }
+    }
+
+
+@router.delete("/assets/{asset_id}")
+async def delete_library_asset(asset_id: str, project_id: str = None):
+    """Delete asset from active project library."""
+    active_pid = project_id if (project_id and project_id in PROJECTS_STORE) else list(PROJECTS_STORE.keys())[0]
+    if active_pid in PROJECTS_STORE:
+        PROJECTS_STORE[active_pid]["assets"] = [
+            a for a in PROJECTS_STORE[active_pid].get("assets", []) if a.get("id") != asset_id
+        ]
+        PROJECTS_STORE[active_pid]["segments"] = [
+            s for s in PROJECTS_STORE[active_pid].get("segments", []) if s.get("id") != asset_id
+        ]
+    return {"status": "success", "deleted_id": asset_id}
 
 
 @router.post("/images/generate")

@@ -1303,8 +1303,8 @@
             <!-- Brand & Project Switcher -->
             <div style="display:flex; align-items:center; gap:12px;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <div class="logo-badge" style="width:34px; height:34px; font-size:1rem; border-radius:10px;">⚡</div>
-                    <span style="font-weight:800; font-size:0.92rem; color:#fff; white-space:nowrap;">CloudHost <span style="font-weight:400; opacity:0.85;">AI Studio</span></span>
+                    <div class="logo-badge" style="width:34px; height:34px; font-size:1rem; border-radius:10px;">SG</div>
+                    <span style="font-weight:800; font-size:0.92rem; color:#fff; white-space:nowrap;">SiteGround <span style="font-weight:400; opacity:0.85; color:var(--sg-green);">AI Studio</span></span>
                 </div>
                 
                 <div style="height:20px; width:1px; background:rgba(255,255,255,0.15);"></div>
@@ -1312,10 +1312,21 @@
                 <div style="display:flex; align-items:center; gap:6px; background:rgba(31, 41, 55, 0.6); padding:4px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
                     <span style="font-size:0.75rem; font-weight:700; color:var(--sg-green);">📁 Project:</span>
                     <select id="project-select" onchange="switchProject(this.value)" style="background:transparent; border:none; color:#ffffff; font-size:0.78rem; font-weight:600; cursor:pointer; outline:none;">
-                        <option value="proj_wp_speed" style="background:#0f172a; color:#fff;">Managed WordPress Cloud Speed Promo</option>
-                        <option value="proj_cloud_247" style="background:#0f172a; color:#fff;">Enterprise NVMe Cloud & 24/7 Support</option>
+                        <option value="proj_wp_speed" style="background:#0f172a; color:#fff;">SiteGround Managed WordPress Speed Promo</option>
+                        <option value="proj_cloud_247" style="background:#0f172a; color:#fff;">SiteGround Enterprise Cloud & 24/7 Support</option>
                     </select>
                     <button class="btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="openNewProjectModal()">+ New</button>
+                </div>
+
+                <!-- Dedicated Assets Library & Upload Direct Access -->
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-primary" style="padding:4px 10px; font-size:0.74rem; background:linear-gradient(135deg,#10b981,#059669);" onclick="openAssetsLibraryModal()" title="Open Centralized Assets Library & Media Storage">
+                        📚 Asset Library
+                    </button>
+                    <button class="btn-secondary" style="padding:4px 10px; font-size:0.74rem; border-color:var(--sg-teal); color:#38bdf8;" onclick="document.getElementById('global-asset-file-input').click()" title="Upload Image, Video (MP4) or Audio (MP3) files directly">
+                        📤 Upload
+                    </button>
+                    <input type="file" id="global-asset-file-input" multiple accept="image/*,video/*,audio/*" style="display:none;" onchange="handleGlobalAssetUpload(this.files)">
                 </div>
             </div>
 
@@ -1500,6 +1511,60 @@
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
                     <button class="btn-secondary" onclick="closePromptOptionsModal()">Cancel</button>
                     <button class="btn-primary" id="modal-submit-btn" onclick="submitCanvasActionFromModal()">🚀 Execute Generation</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full-Featured Assets Library Modal -->
+        <div id="assets-library-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:99999; align-items:center; justify-content:center;">
+            <div class="card" style="width:1040px; max-width:95%; max-height:90vh; display:flex; flex-direction:column; border:1.5px solid var(--sg-green); box-shadow:0 0 60px rgba(150,203,76,0.35); padding:0; overflow:hidden;">
+                <!-- Header -->
+                <div class="card-header" style="padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.95); flex-shrink:0;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="logo-badge" style="width:34px; height:34px; font-size:1.1rem; border-radius:10px;">📚</div>
+                        <div>
+                            <div class="card-title" style="font-size:1.1rem; color:#fff; display:flex; align-items:center; gap:8px;">
+                                <span>SiteGround Assets Library & Media Storage</span>
+                                <span class="badge badge-teal" id="library-total-count-badge" style="font-size:0.68rem;">24 Assets</span>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-sub);">Centralized repository of brand banners, motion B-Roll clips, and voiceovers.</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button class="btn-primary" style="padding:6px 14px; font-size:0.78rem; background:linear-gradient(135deg,#10b981,#059669);" onclick="document.getElementById('library-asset-file-input').click()">
+                            📤 Upload Files
+                        </button>
+                        <input type="file" id="library-asset-file-input" multiple accept="image/*,video/*,audio/*" style="display:none;" onchange="handleGlobalAssetUpload(this.files)">
+                        <button class="btn-secondary" style="padding:4px 10px; font-size:0.9rem;" onclick="closeAssetsLibraryModal()">✕</button>
+                    </div>
+                </div>
+
+                <!-- Filter & Search Toolbar -->
+                <div style="padding:12px 20px; background:rgba(3,7,18,0.75); border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; flex-shrink:0;">
+                    <div style="display:flex; gap:6px;" id="asset-library-tabs">
+                        <button class="fab-btn fab-btn-primary active" style="height:28px; padding:0 12px; font-size:0.72rem;" onclick="filterLibraryTab('all', this)">🌟 All Assets</button>
+                        <button class="fab-btn fab-btn-secondary" style="height:28px; padding:0 12px; font-size:0.72rem;" onclick="filterLibraryTab('image', this)">🖼️ Images</button>
+                        <button class="fab-btn fab-btn-secondary" style="height:28px; padding:0 12px; font-size:0.72rem;" onclick="filterLibraryTab('video', this)">📹 Video Clips</button>
+                        <button class="fab-btn fab-btn-secondary" style="height:28px; padding:0 12px; font-size:0.72rem;" onclick="filterLibraryTab('audio', this)">🎙️ Audio Tracks</button>
+                    </div>
+                    <div style="flex:1; max-width:340px; position:relative;">
+                        <input type="text" id="library-search-input" oninput="searchLibraryAssets(this.value)" placeholder="🔍 Search assets by name, tag, type..." style="width:100%; height:32px; background:rgba(15,23,42,0.9); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff; padding:0 10px; font-size:0.78rem;">
+                    </div>
+                </div>
+
+                <!-- Dropzone & Asset Grid Container (Scrollable) -->
+                <div style="padding:16px 20px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:16px;" id="library-content-wrap">
+                    <!-- Drag & Drop Area -->
+                    <div id="library-dropzone" ondragover="event.preventDefault(); this.style.borderColor='var(--sg-green)'; this.style.background='rgba(150,203,76,0.1)';" ondragleave="this.style.borderColor='rgba(255,255,255,0.2)'; this.style.background='rgba(15,23,42,0.4)';" ondrop="handleDropzoneUpload(event)" onclick="document.getElementById('library-asset-file-input').click()" style="border:2px dashed rgba(255,255,255,0.2); background:rgba(15,23,42,0.4); border-radius:12px; padding:18px; text-align:center; cursor:pointer; transition:all 0.2s ease;">
+                        <div style="font-size:1.6rem; margin-bottom:4px;">📁</div>
+                        <div style="font-weight:700; color:#fff; font-size:0.85rem;">Drag & drop any Image (PNG, JPG), Video (MP4), or Audio (MP3) here</div>
+                        <div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">Files are automatically categorized, stored in project storage, and ready to spawn on workbench.</div>
+                    </div>
+
+                    <!-- Grid of Asset Cards -->
+                    <div id="library-asset-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px;">
+                        <!-- Dynamically populated -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -4959,6 +5024,349 @@
                 if (respBox) respBox.innerText = `⚠️ Copilot Error: ${e.message}`;
             }
         }
+
+        // ==============================================================================
+        // ASSETS LIBRARY & MULTI-MODAL UPLOAD ENGINE
+        // ==============================================================================
+        let currentLibraryTab = 'all';
+        let currentLibrarySearch = '';
+        let cachedLibraryData = null;
+
+        function openAssetsLibraryModal() {
+            const modal = document.getElementById('assets-library-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                fetchAndRenderAssetsLibrary();
+            }
+        }
+
+        function closeAssetsLibraryModal() {
+            const modal = document.getElementById('assets-library-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function fetchAndRenderAssetsLibrary() {
+            const grid = document.getElementById('library-asset-grid');
+            const countBadge = document.getElementById('library-total-count-badge');
+            if (!grid) return;
+
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--text-sub);">⏳ Loading assets library...</div>`;
+
+            try {
+                const activeProj = document.getElementById('project-select')?.value || 'proj_wp_speed';
+                const res = await fetch(`/api/studio/assets?project_id=${activeProj}`);
+                const data = await res.json();
+                cachedLibraryData = data.assets || { all: [], images: [], videos: [], audios: [] };
+                
+                if (countBadge) countBadge.innerText = `${data.total_count || 0} Assets`;
+                renderLibraryGrid();
+            } catch(e) {
+                console.error("Error fetching library assets:", e);
+                grid.innerHTML = `<div style="grid-column:1/-1; color:#ef4444; padding:20px;">⚠️ Failed loading assets library.</div>`;
+            }
+        }
+
+        function filterLibraryTab(tabType, btnEl) {
+            currentLibraryTab = tabType;
+            const tabBtns = document.querySelectorAll('#asset-library-tabs button');
+            tabBtns.forEach(b => {
+                b.classList.remove('active', 'fab-btn-primary');
+                b.classList.add('fab-btn-secondary');
+            });
+            if (btnEl) {
+                btnEl.classList.remove('fab-btn-secondary');
+                btnEl.classList.add('active', 'fab-btn-primary');
+            }
+            renderLibraryGrid();
+        }
+
+        function searchLibraryAssets(query) {
+            currentLibrarySearch = (query || '').toLowerCase().trim();
+            renderLibraryGrid();
+        }
+
+        function renderLibraryGrid() {
+            const grid = document.getElementById('library-asset-grid');
+            if (!grid || !cachedLibraryData) return;
+
+            let list = cachedLibraryData[currentLibraryTab] || cachedLibraryData.all || [];
+            
+            if (currentLibrarySearch) {
+                list = list.filter(item => 
+                    (item.title || '').toLowerCase().includes(currentLibrarySearch) ||
+                    (item.category || '').toLowerCase().includes(currentLibrarySearch) ||
+                    (item.type || '').toLowerCase().includes(currentLibrarySearch)
+                );
+            }
+
+            if (list.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:var(--text-muted); background:rgba(15,23,42,0.4); border-radius:12px; border:1px dashed rgba(255,255,255,0.1);">
+                        <div style="font-size:1.8rem; margin-bottom:8px;">📁</div>
+                        <div style="font-size:0.9rem; font-weight:700; color:#fff;">No Assets Found</div>
+                        <div style="font-size:0.75rem; color:var(--text-sub); margin-top:4px;">Upload new assets using the upload box above or generate with AI.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            list.forEach(item => {
+                const isImg = item.type === 'image';
+                const isVid = item.type === 'video';
+                const isAud = item.type === 'audio';
+
+                let previewHtml = '';
+                if (isImg) {
+                    previewHtml = `<img src="${item.file_path}" style="width:100%; height:130px; object-fit:cover; border-radius:6px;" loading="lazy">`;
+                } else if (isVid) {
+                    previewHtml = `<video src="${item.file_path}" controls style="width:100%; height:130px; object-fit:cover; border-radius:6px; background:#000;"></video>`;
+                } else if (isAud) {
+                    previewHtml = `
+                        <div style="height:130px; display:flex; flex-direction:column; justify-content:center; align-items:center; background:rgba(168,85,247,0.15); border-radius:6px; padding:10px;">
+                            <div style="font-size:2rem; margin-bottom:6px;">🎙️</div>
+                            <audio src="${item.file_path}" controls style="width:100%; height:32px;"></audio>
+                        </div>
+                    `;
+                }
+
+                const typeBadgeColor = isImg ? 'badge-teal' : (isVid ? 'badge-blue' : 'badge-purple');
+                const typeLabel = isImg ? '🖼️ Image' : (isVid ? '📹 Video' : '🎙️ Audio');
+
+                html += `
+                    <div class="card" style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.1); padding:10px; display:flex; flex-direction:column; gap:8px; transition:transform 0.2s ease, border-color 0.2s ease;" onmouseenter="this.style.borderColor='var(--sg-green)';" onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)';">
+                        <div style="position:relative;">
+                            ${previewHtml}
+                            <span class="badge ${typeBadgeColor}" style="position:absolute; top:6px; left:6px; font-size:0.62rem; padding:2px 6px;">${typeLabel}</span>
+                        </div>
+                        <div>
+                            <div style="font-size:0.78rem; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-sub); margin-top:2px;">
+                                <span>${escapeHtml(item.category || 'Asset')}</span>
+                                <span>${item.size_kb ? item.size_kb + ' KB' : (item.duration || 'Ready')}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:6px; margin-top:auto;">
+                            <button class="btn-primary" style="flex:1; padding:4px 6px; font-size:0.7rem; background:linear-gradient(135deg,#10b981,#06b6d4);" onclick="spawnAssetOnWorkbench('${item.id}', '${item.type}', '${item.file_path}', '${escapeHtml(item.title)}')">
+                                ➕ Spawn Card
+                            </button>
+                            <button class="btn-secondary" style="padding:4px 8px; font-size:0.7rem; color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="deleteAssetFromLibrary('${item.id}')" title="Delete Asset">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        async function handleGlobalAssetUpload(files) {
+            if (!files || files.length === 0) return;
+            const activeProj = document.getElementById('project-select')?.value || 'proj_wp_speed';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('project_id', activeProj);
+                formData.append('title', file.name);
+
+                try {
+                    const res = await fetch('/api/studio/assets/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success' && data.asset) {
+                        appendBotChatMessage(`
+                            <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">📤 Asset Uploaded: ${escapeHtml(file.name)}</div>
+                            <p style="margin:4px 0 0 0; font-size:0.8rem;">Added to central library and ready to spawn on workbench.</p>
+                        `);
+                    }
+                } catch(e) {
+                    console.error("Upload error:", e);
+                }
+            }
+
+            // Refresh library if open
+            fetchAndRenderAssetsLibrary();
+            switchProject(activeProj);
+        }
+
+        function handleDropzoneUpload(e) {
+            e.preventDefault();
+            const dropzone = document.getElementById('library-dropzone');
+            if (dropzone) {
+                dropzone.style.borderColor = 'rgba(255,255,255,0.2)';
+                dropzone.style.background = 'rgba(15,23,42,0.4)';
+            }
+            if (e.dataTransfer && e.dataTransfer.files) {
+                handleGlobalAssetUpload(e.dataTransfer.files);
+            }
+        }
+
+        function spawnAssetOnWorkbench(assetId, assetType, filePath, title) {
+            const maxX = canvasNodes.length > 0 ? Math.max(...canvasNodes.map(n => (n.x || 0) + 420)) : 500;
+            const spawnX = Math.max(maxX + 40, 500);
+            const spawnY = 180 + (canvasNodes.length % 4 * 160);
+
+            if (assetType === 'image') {
+                canvasNodes.push({
+                    id: `img_user_${Date.now()}`,
+                    type: 'image',
+                    x: spawnX,
+                    y: spawnY,
+                    parentIds: [],
+                    data: {
+                        file_path: filePath,
+                        prompt: title || 'User Uploaded Image Asset'
+                    }
+                });
+            } else if (assetType === 'video') {
+                canvasNodes.push({
+                    id: `clip_user_${Date.now()}`,
+                    type: 'clip',
+                    x: spawnX,
+                    y: spawnY,
+                    parentIds: [],
+                    data: {
+                        video_url: filePath,
+                        prompt: title || 'User Uploaded Video Clip',
+                        duration: '8.0s'
+                    }
+                });
+            } else if (assetType === 'audio') {
+                canvasNodes.push({
+                    id: `audio_user_${Date.now()}`,
+                    type: 'audio',
+                    x: spawnX,
+                    y: spawnY,
+                    parentIds: [],
+                    data: {
+                        audio_url: filePath,
+                        language: 'Uploaded Audio',
+                        ssml_parsed: title || 'User Audio Track',
+                        prompt: title
+                    }
+                });
+            }
+
+            renderCanvasNodes();
+            closeAssetsLibraryModal();
+
+            appendBotChatMessage(`
+                <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">🚀 Spawned ${assetType.toUpperCase()} Card on Workbench</div>
+                <p style="margin:4px 0 0 0; font-size:0.8rem;">Spawned "<b>${escapeHtml(title)}</b>" on canvas.</p>
+            `);
+        }
+
+        async function deleteAssetFromLibrary(assetId) {
+            if (!confirm("Are you sure you want to remove this asset from the library?")) return;
+            const activeProj = document.getElementById('project-select')?.value || 'proj_wp_speed';
+            try {
+                await fetch(`/api/studio/assets/${assetId}?project_id=${activeProj}`, { method: 'DELETE' });
+                fetchAndRenderAssetsLibrary();
+            } catch(e) {
+                console.error("Delete error:", e);
+            }
+        }
+
+        // Canvas Direct Drag-and-Drop Handler
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvasContainerEl = document.getElementById('infinite-canvas-container');
+            if (canvasContainerEl) {
+                canvasContainerEl.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
+                canvasContainerEl.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+
+                    const dropClientX = e.clientX;
+                    const dropClientY = e.clientY;
+                    const canvasX = (dropClientX - canvasPanX) / canvasZoom;
+                    const canvasY = (dropClientY - canvasPanY) / canvasZoom;
+
+                    const files = e.dataTransfer.files;
+                    const activeProj = document.getElementById('project-select')?.value || 'proj_wp_speed';
+
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('project_id', activeProj);
+                        formData.append('title', file.name);
+
+                        try {
+                            const res = await fetch('/api/studio/assets/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await res.json();
+                            if (data.status === 'success' && data.asset) {
+                                const asset = data.asset;
+                                const spawnX = canvasX + (i * 40);
+                                const spawnY = canvasY + (i * 40);
+
+                                if (asset.type === 'image') {
+                                    canvasNodes.push({
+                                        id: `img_dropped_${Date.now()}_${i}`,
+                                        type: 'image',
+                                        x: spawnX,
+                                        y: spawnY,
+                                        parentIds: Array.from(selectedNodeIds),
+                                        data: {
+                                            file_path: asset.file_path,
+                                            prompt: asset.title
+                                        }
+                                    });
+                                } else if (asset.type === 'video') {
+                                    canvasNodes.push({
+                                        id: `clip_dropped_${Date.now()}_${i}`,
+                                        type: 'clip',
+                                        x: spawnX,
+                                        y: spawnY,
+                                        parentIds: Array.from(selectedNodeIds),
+                                        data: {
+                                            video_url: asset.file_path,
+                                            prompt: asset.title,
+                                            duration: '8.0s'
+                                        }
+                                    });
+                                } else if (asset.type === 'audio') {
+                                    canvasNodes.push({
+                                        id: `audio_dropped_${Date.now()}_${i}`,
+                                        type: 'audio',
+                                        x: spawnX,
+                                        y: spawnY,
+                                        parentIds: Array.from(selectedNodeIds),
+                                        data: {
+                                            audio_url: asset.file_path,
+                                            language: 'Dropped Audio',
+                                            ssml_parsed: asset.title,
+                                            prompt: asset.title
+                                        }
+                                    });
+                                }
+                            }
+                        } catch(err) {
+                            console.error("Drop upload error:", err);
+                        }
+                    }
+
+                    renderCanvasNodes();
+                    appendBotChatMessage(`
+                        <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">🎯 Assets Dropped Directly onto Workbench</div>
+                        <p style="margin:4px 0 0 0; font-size:0.8rem;">Uploaded and spawned ${files.length} cards at canvas position.</p>
+                    `);
+                });
+            }
+        });
 
         document.addEventListener("DOMContentLoaded", () => {
             switchProject('proj_wp_speed');

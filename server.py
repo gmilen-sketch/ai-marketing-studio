@@ -28,9 +28,14 @@ async def serve_media(filename: str):
             elif "support" in filename or "trustpilot" in filename:
                 asset_type = "support"
             elif "discount" in filename or "promo" in filename:
+                asset_type = "discount"
+            generate_campaign_asset(asset_type, "")
+            file_path = os.path.join(PROJECT_DIR, filename)
+            if not os.path.exists(file_path):
+                file_path = os.path.join(PROJECT_DIR, "media", filename)
         elif filename.endswith(".mp4"):
             try:
-                from app.compositor import render_marketing_video
+                from app.video_renderer import render_marketing_video
                 render_marketing_video(variant_id="variant_1", aspect_ratio="16:9", target_path=file_path)
             except Exception as e:
                 print(f"Fallback video rendering: {e}")
