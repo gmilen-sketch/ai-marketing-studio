@@ -2143,7 +2143,7 @@
                     };
 
                     html += `
-                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:${node.width || 450}px; min-width:380px; max-width:720px; resize:both; overflow:hidden;" onclick="if(!event.target.closest('button, input, select, textarea, .tab-btn')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
+                        <div class="canvas-node ${isSel} ${isMin}" id="node-${node.id}" style="left:${node.x}px; top:${node.y}px; width:${node.width || 450}px; min-width:380px; max-width:720px; resize:both;" onclick="if(!event.target.closest('button, input, select, textarea, .tab-btn')){ selectedNodeIds.clear(); selectedNodeIds.add('${node.id}'); renderCanvasNodes(); }">
                             <div class="node-port node-port-in port-type-prompt" data-node-id="${node.id}" data-port-type="prompt" onmouseup="finishWireConnect('${node.id}', event)" title="Prompt Input Socket" style="top:50%;">📝</div>
                             <div class="node-port node-port-out port-type-image" data-node-id="${node.id}" data-port-type="image" onmousedown="startWireDrag('${node.id}', 'image', event)" title="Click or Drag to Spawn Image Asset" style="top:30%;">🖼️</div>
                             <div class="node-port node-port-out port-type-audio" data-node-id="${node.id}" data-port-type="audio" onmousedown="startWireDrag('${node.id}', 'audio', event)" title="Click or Drag to Spawn Audio Narration" style="top:50%;">🎙️</div>
@@ -2151,12 +2151,12 @@
                             <div class="canvas-node-header" onmousedown="startNodeDrag(event, '${node.id}')">
                                 <span style="font-size:0.75rem; font-weight:700;">📝 ${node.data.title}</span>
                                 <div style="display:flex; align-items:center; gap:6px;">
-                                    <button onclick="toggleNarrativeZoom('${node.id}')" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:0.75rem;" title="Zoom / Expand Document View">🔍 Zoom</button>
-                                    <button onclick="toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Collapse">⤢</button>
-                                    <label style="display:flex; align-items:center; gap:3px; font-size:0.72rem; cursor:pointer;">
-                                        <input type="checkbox" ${checkChecked} onclick="toggleNodeSelection('${node.id}', event)"> Select
+                                    <button onclick="event.stopPropagation(); toggleNarrativeZoom('${node.id}')" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:0.75rem;" title="Zoom / Expand Document View">🔍 Zoom</button>
+                                    <button onclick="event.stopPropagation(); toggleCardMinimize('${node.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;" title="Minimize/Collapse">⤢</button>
+                                    <label style="display:flex; align-items:center; gap:3px; font-size:0.72rem; cursor:pointer;" onclick="event.stopPropagation();">
+                                        <input type="checkbox" ${checkChecked} onclick="event.stopPropagation(); toggleNodeSelection('${node.id}', event)"> Select
                                     </label>
-                                    <button style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.85rem;" onclick="removeCanvasNode('${node.id}')" title="Remove Narrative">❌</button>
+                                    <button style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.85rem;" onclick="event.stopPropagation(); removeCanvasNode('${node.id}')" title="Remove Narrative">❌</button>
                                 </div>
                             </div>
                             <div class="canvas-node-body" style="display:flex; flex-direction:column; gap:8px;">
@@ -2167,10 +2167,10 @@
 
                                 <!-- Marketing Document Tabs -->
                                 <div style="display:flex; gap:2px; background:rgba(0,0,0,0.4); padding:2px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
-                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'hook' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'hook' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'hook' ? '700' : '400'};" onclick="setNarrativeTab('${node.id}', 'hook')">🎣 Hook & Angle</button>
-                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'storyboard' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'storyboard' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'storyboard' ? '700' : '400'};" onclick="setNarrativeTab('${node.id}', 'storyboard')">🎬 Storyboard</button>
-                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'copy' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'copy' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'copy' ? '700' : '400'};" onclick="setNarrativeTab('${node.id}', 'copy')">📋 Ad Copy</button>
-                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'psychology' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'psychology' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'psychology' ? '700' : '400'};" onclick="setNarrativeTab('${node.id}', 'psychology')">🧠 Psychology</button>
+                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'hook' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'hook' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'hook' ? '700' : '400'};" onclick="event.stopPropagation(); setNarrativeTab('${node.id}', 'hook')">🎣 Hook & Angle</button>
+                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'storyboard' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'storyboard' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'storyboard' ? '700' : '400'};" onclick="event.stopPropagation(); setNarrativeTab('${node.id}', 'storyboard')">🎬 Storyboard</button>
+                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'copy' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'copy' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'copy' ? '700' : '400'};" onclick="event.stopPropagation(); setNarrativeTab('${node.id}', 'copy')">📋 Ad Copy</button>
+                                    <button class="tab-btn" style="flex:1; padding:4px 2px; font-size:0.65rem; border:none; border-radius:4px; cursor:pointer; background:${narTab === 'psychology' ? 'var(--sg-green)' : 'transparent'}; color:${narTab === 'psychology' ? '#000' : 'var(--text-sub)'}; font-weight:${narTab === 'psychology' ? '700' : '400'};" onclick="event.stopPropagation(); setNarrativeTab('${node.id}', 'psychology')">🧠 Psychology</button>
                                 </div>
 
                                 <!-- Tab 1: Hook & Angle (PAS Framework) -->
@@ -2246,13 +2246,13 @@
 
                                 <!-- Action Buttons -->
                                 <div style="display:flex; gap:4px; margin-top:4px;">
-                                    <button class="btn-secondary" id="btn-nar-${node.id}" style="flex:1; font-size:0.72rem; padding:4px 6px;" onclick="generateImagesForNarrativeNode('${node.id}')">
+                                    <button class="btn-secondary" id="btn-nar-${node.id}" style="flex:1; font-size:0.72rem; padding:4px 6px;" onclick="event.stopPropagation(); generateImagesForNarrativeNode('${node.id}')">
                                         🖼️ Generate Images
                                     </button>
-                                    <button class="btn-secondary" style="font-size:0.72rem; padding:4px 6px; border-color:var(--sg-teal); color:#38bdf8;" onclick="spawnMatrixForNarrative('${node.id}')" title="Expand to 50+ Variations Matrix">
+                                    <button class="btn-secondary" style="font-size:0.72rem; padding:4px 6px; border-color:var(--sg-teal); color:#38bdf8;" onclick="event.stopPropagation(); spawnMatrixForNarrative('${node.id}')" title="Expand to 50+ Variations Matrix">
                                         ⚡ 50+ Matrix
                                     </button>
-                                    <button class="btn-secondary" style="font-size:0.72rem; background:rgba(239,68,68,0.2); border-color:rgba(239,68,68,0.4); color:#fca5a5; padding:4px 6px;" onclick="removeCanvasNode('${node.id}')">
+                                    <button class="btn-secondary" style="font-size:0.72rem; background:rgba(239,68,68,0.2); border-color:rgba(239,68,68,0.4); color:#fca5a5; padding:4px 6px;" onclick="event.stopPropagation(); removeCanvasNode('${node.id}')">
                                         ❌
                                     </button>
                                 </div>
@@ -5956,7 +5956,6 @@
 
         function spawnMatrixForNarrative(narId) {
             const nar = canvasNodes.find(n => n.id === narId);
-            const maxX = canvasNodes.length > 0 ? Math.max(...canvasNodes.map(n => (n.x || 0) + 400)) : 800;
             const matrixId = `matrix_${Date.now()}`;
             
             // Find if there is a child image card created from this narrative
@@ -5967,11 +5966,14 @@
             // Keep single matrix card on canvas
             canvasNodes = canvasNodes.filter(n => n.type !== 'expansion_matrix');
             
+            const spawnX = nar ? (nar.x + (nar.width || 450) + 50) : 850;
+            const spawnY = nar ? nar.y : 140;
+
             canvasNodes.push({
                 id: matrixId,
                 type: 'expansion_matrix',
-                x: Math.max(maxX + 40, 900),
-                y: nar ? nar.y : 140,
+                x: spawnX,
+                y: spawnY,
                 parentIds: nar ? [nar.id] : ['launcher_node'],
                 data: {
                     sourceImage: baseImg,
@@ -5990,6 +5992,10 @@
                 }
             });
             renderCanvasNodes();
+            if (typeof focusNode === 'function') {
+                setTimeout(() => focusNode(matrixId), 50);
+            }
+
             appendBotChatMessage(`
                 <div style="font-weight:700; color:var(--sg-green); font-size:0.78rem;">⚡ 50+ Multivariate Creative Expansion Matrix</div>
                 <p style="margin:4px 0 0 0; font-size:0.8rem;">Spawned single matrix card for 4 Palettes × 8 Languages × 3 Aspect Ratios from Narrative.</p>
@@ -6018,18 +6024,20 @@
 
         function spawnMatrixForImageNode(imgId) {
             const imgNode = canvasNodes.find(n => n.id === imgId);
-            const maxX = canvasNodes.length > 0 ? Math.max(...canvasNodes.map(n => (n.x || 0) + 400)) : 800;
             const matrixId = `matrix_${Date.now()}`;
             const baseImg = imgNode ? imgNode.data.file_path : '/media/asset_supercacher_speed.png';
             const promptVal = imgNode ? imgNode.data.prompt : 'SiteGround 3X Speed Boost Campaign';
             
             canvasNodes = canvasNodes.filter(n => n.type !== 'expansion_matrix');
             
+            const spawnX = imgNode ? (imgNode.x + (imgNode.width || 380) + 50) : 850;
+            const spawnY = imgNode ? imgNode.y : 140;
+
             canvasNodes.push({
                 id: matrixId,
                 type: 'expansion_matrix',
-                x: Math.max(maxX + 40, 900),
-                y: imgNode ? imgNode.y : 140,
+                x: spawnX,
+                y: spawnY,
                 parentIds: imgNode ? [imgNode.id] : ['launcher_node'],
                 data: {
                     sourceImage: baseImg,
@@ -6048,6 +6056,9 @@
                 }
             });
             renderCanvasNodes();
+            if (typeof focusNode === 'function') {
+                setTimeout(() => focusNode(matrixId), 50);
+            }
 
             fetch('/api/studio/images/variations', {
                 method: 'POST',
