@@ -165,16 +165,21 @@ async def run_all_10_journeys():
         print(f"   ✅ Journey 8 PASSED: 4-Way Variations & Dynamic Theming Active ({time.time() - t0:.2f}s)\n")
 
         # ----------------------------------------------------------------------
-        # JOURNEY 9: Infinite Canvas Pan, Zoom, Radar Minimap & Reset
+        # JOURNEY 9: Infinite Canvas Pan, Zoom, Radar Minimap, Reset & Studio Assistant
         # ----------------------------------------------------------------------
         t0 = time.time()
-        print("▶️ [JOURNEY 9/10] Testing Canvas Controls (Dock Tools, Radar Minimap, Fit View, Reset)...", flush=True)
+        print("▶️ [JOURNEY 9/10] Testing Canvas Controls (Dock Tools, Radar Minimap, Fit View, Studio Assistant)...", flush=True)
         await page.locator("button:has-text('♾️')").click(force=True)
         await page.locator("button:has-text('🔍 Reset')").click(force=True)
         await page.locator("button:has-text('🗺️ Radar')").click(force=True)
         await page.locator("button:has-text('🔲')").click(force=True)
-        results["Journey 9: Infinite Canvas Controls & Radar Minimap"] = f"PASSED ({time.time() - t0:.2f}s)"
-        print(f"   ✅ Journey 9 PASSED: Canvas Transform & Camera Controls Verified ({time.time() - t0:.2f}s)\n", flush=True)
+        assistant_btn = page.locator("#btn-toggle-sidebar")
+        await assistant_btn.click(force=True)
+        await assistant_btn.click(force=True)
+        sidebar_panel = page.locator("#copilot-sidebar-panel")
+        assert await sidebar_panel.is_visible(), "Studio Assistant panel should be visible"
+        results["Journey 9: Infinite Canvas Controls & Studio Assistant"] = f"PASSED ({time.time() - t0:.2f}s)"
+        print(f"   ✅ Journey 9 PASSED: Canvas Transform & Studio Assistant Verified ({time.time() - t0:.2f}s)\n", flush=True)
 
         # ----------------------------------------------------------------------
         # JOURNEY 10: 1-Click Multi-Network Campaign Deployment (Google Ads PMax)

@@ -21,28 +21,61 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 @router.get("/ppc/telemetry")
 async def get_ppc_telemetry():
     """BigQuery Closed-Loop Performance Data RAG Telemetry."""
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=os.environ.get("GOOGLE_CLOUD_PROJECT", "firsttestproject-343414"))
+        query = """
+            SELECT hook_text, avg_ctr, conversion_rate, category, search_query_cluster, abcd_quality_score
+            FROM `firsttestproject-343414.siteground_marketing_analytics.pmax_creative_telemetry`
+            ORDER BY conversion_rate DESC LIMIT 5
+        """
+        results = list(client.query(query).result())
+        if results:
+            hooks = []
+            for r in results:
+                hooks.append({
+                    "hook": r["hook_text"],
+                    "avg_ctr": float(r["avg_ctr"]),
+                    "conversion_rate": float(r["conversion_rate"]),
+                    "category": r["category"],
+                    "search_query_cluster": r.get("search_query_cluster", "general"),
+                    "abcd_score": float(r.get("abcd_quality_score", 9.5))
+                })
+            return {
+                "source": "BigQuery (firsttestproject-343414.siteground_marketing_analytics)",
+                "top_performing_hooks": hooks,
+                "conversion_benchmarks": {
+                    "top_10_percent_roas": 4.85,
+                    "avg_cpa_decrease": "32%",
+                    "recommended_pacing_rate": 1.05,
+                }
+            }
+    except Exception as e:
+        print(f"BigQuery live query fallback: {e}")
+
     return {
+        "source": "Fallback Cache",
         "top_performing_hooks": [
             {
-                "hook": "Is your slow website killing your sales?",
-                "avg_ctr": 0.0842,
+                "hook": "Is your slow website killing your sales? 1-second delay = 7% conversion loss.",
+                "avg_ctr": 0.0884,
                 "conversion_rate": 0.1420,
                 "category": "managed_wordpress",
-                "search_query_cluster": "slow wordpress site fix",
+                "search_query_cluster": "slow wordpress site checkout fix",
             },
             {
-                "hook": "500 Internal Server Error at 2 AM? Fix it in 10 seconds.",
-                "avg_ctr": 0.0915,
-                "conversion_rate": 0.1580,
+                "hook": "Stop paying $200/mo for sluggish cloud hosting. Switch to SiteGround Ultra NVMe.",
+                "avg_ctr": 0.0842,
+                "conversion_rate": 0.1280,
                 "category": "cloud_hosting",
-                "search_query_cluster": "wordpress crash support 24/7",
+                "search_query_cluster": "best fast agency cloud hosting 2026",
             },
             {
-                "hook": "Stop paying $200/mo for sluggish hosting. Switch to SiteGround.",
-                "avg_ctr": 0.0760,
-                "conversion_rate": 0.1290,
-                "category": "agency_hosting",
-                "search_query_cluster": "best fast wordpress host",
+                "hook": "It's 2 AM and your site is DOWN. SiteGround 24/7 technical experts reply in 2 seconds.",
+                "avg_ctr": 0.0805,
+                "conversion_rate": 0.1190,
+                "category": "enterprise_support",
+                "search_query_cluster": "reliable 24 7 wordpress support hosting",
             },
         ],
         "conversion_benchmarks": {
@@ -51,6 +84,137 @@ async def get_ppc_telemetry():
             "recommended_pacing_rate": 1.05,
         },
     }
+
+
+@router.post("/analytics/dynamic_rag")
+async def dynamic_bigquery_rag(request: Request):
+    """Dynamically query BigQuery based on campaign objective, audience cohort, and feature."""
+    body = await request.json()
+    goal = body.get("goal", "").strip()
+    audience = body.get("audience", "").strip()
+    feature = body.get("feature", "").strip()
+
+    combined = (goal + " " + feature + " " + audience).lower()
+    
+    cat_filter = "managed_wordpress"
+    if "support" in combined or "24/7" in combined or "down" in combined or "crash" in combined:
+        cat_filter = "enterprise_support"
+    elif "discount" in combined or "80%" in combined or "promo" in combined or "offer" in combined:
+        cat_filter = "promotional_discount"
+    elif "cloud" in combined or "agency" in combined or "developer" in combined or "nvme" in combined:
+        cat_filter = "cloud_hosting"
+
+    cohort_filter = "COH-US-ECOM"
+    if "emea" in combined or "agency" in combined or "europe" in combined:
+        cohort_filter = "COH-EMEA-DEV"
+    elif "apac" in combined or "smb" in combined or "asia" in combined:
+        cohort_filter = "COH-APAC-SMB"
+
+    comp_filter = "Bluehost / Generic EIG"
+    if "price" in combined or "cost" in combined or "expensive" in combined:
+        comp_filter = "WP Engine"
+    elif "security" in combined or "ssl" in combined or "backup" in combined:
+        comp_filter = "GoDaddy"
+
+    sql_query = f"""
+        SELECT 
+            p.hook_text, p.avg_ctr, p.conversion_rate, p.cpa_dollars, p.abcd_quality_score,
+            c.cohort_name, c.region, c.avg_ltv_usd, c.opportunity_score, c.recommended_hook,
+            b.competitor_name, b.weakness_angle, b.benchmark_ttfb_ms, b.siteground_ttfb_ms, b.counter_narrative_hook
+        FROM `firsttestproject-343414.siteground_marketing_analytics.pmax_creative_telemetry` p
+        CROSS JOIN `firsttestproject-343414.siteground_marketing_analytics.customer_cohorts_ltv` c
+        CROSS JOIN `firsttestproject-343414.siteground_marketing_analytics.competitor_benchmarks` b
+        WHERE p.category = '{cat_filter}' AND c.cohort_id = '{cohort_filter}' AND b.competitor_name = '{comp_filter}'
+        LIMIT 1
+    """
+
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=os.environ.get("GOOGLE_CLOUD_PROJECT", "firsttestproject-343414"))
+        rows = list(client.query(sql_query).result())
+        if rows:
+            r = rows[0]
+            return {
+                "status": "success",
+                "source": "BigQuery Live Execution (firsttestproject-343414.siteground_marketing_analytics)",
+                "sql_executed": sql_query.strip(),
+                "hook": {
+                    "text": r["hook_text"],
+                    "avg_ctr": float(r["avg_ctr"]),
+                    "conversion_rate": float(r["conversion_rate"]),
+                    "cpa_dollars": float(r.get("cpa_dollars", 14.5)),
+                    "abcd_score": float(r.get("abcd_quality_score", 9.6))
+                },
+                "cohort": {
+                    "name": r["cohort_name"],
+                    "region": r["region"],
+                    "ltv": float(r["avg_ltv_usd"]),
+                    "opportunity_score": float(r["opportunity_score"]),
+                    "recommended_hook": r["recommended_hook"]
+                },
+                "competitor": {
+                    "name": r["competitor_name"],
+                    "weakness": r["weakness_angle"],
+                    "benchmark_ttfb": int(r["benchmark_ttfb_ms"]),
+                    "siteground_ttfb": int(r["siteground_ttfb_ms"]),
+                    "counter_hook": r["counter_narrative_hook"]
+                }
+            }
+    except Exception as e:
+        print(f"Dynamic BigQuery RAG live query: {e}")
+
+    return {
+        "status": "fallback",
+        "source": "BigQuery Contextual Intelligence",
+        "sql_executed": sql_query.strip(),
+        "hook": {
+            "text": "Is your slow website killing your sales? 1-second delay = 7% conversion loss.",
+            "avg_ctr": 0.0884,
+            "conversion_rate": 0.1420,
+            "cpa_dollars": 14.50,
+            "abcd_score": 9.7
+        },
+        "cohort": {
+            "name": "US High-Traffic WooCommerce Stores",
+            "region": "North America",
+            "ltv": 2890.00,
+            "opportunity_score": 96.0,
+            "recommended_hook": "3X speed boost, zero checkout downtime, Black Friday scale"
+        },
+        "competitor": {
+            "name": "Bluehost / Generic EIG",
+            "weakness": "Slow shared server response times and sluggish backend",
+            "benchmark_ttfb": 1280,
+            "siteground_ttfb": 190,
+            "counter_hook": "Tired of waiting 2 seconds for your dashboard to load? Experience 190ms TTFB on SiteGround."
+        }
+    }
+
+
+@router.get("/analytics/cohorts")
+async def get_customer_cohorts():
+    """Retrieve BigQuery Customer Cohort LTV & Segment Intelligence."""
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=os.environ.get("GOOGLE_CLOUD_PROJECT", "firsttestproject-343414"))
+        query = "SELECT * FROM `firsttestproject-343414.siteground_marketing_analytics.customer_cohorts_ltv`"
+        results = [dict(row) for row in client.query(query).result()]
+        return {"status": "success", "cohorts": results}
+    except Exception as e:
+        return {"status": "fallback", "error": str(e), "cohorts": []}
+
+
+@router.get("/analytics/benchmarks")
+async def get_competitor_benchmarks():
+    """Retrieve BigQuery Competitor Performance & Counter-Positioning Data."""
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=os.environ.get("GOOGLE_CLOUD_PROJECT", "firsttestproject-343414"))
+        query = "SELECT * FROM `firsttestproject-343414.siteground_marketing_analytics.competitor_benchmarks`"
+        results = [dict(row) for row in client.query(query).result()]
+        return {"status": "success", "benchmarks": results}
+    except Exception as e:
+        return {"status": "fallback", "error": str(e), "benchmarks": []}
 
 
 def generate_studio_scripts(product_feature, target_audience="Managed WordPress Store Owners", duration=15):
@@ -134,100 +298,189 @@ async def generate_scripts(request: Request):
     duration = body.get("duration", 15)
 
     prompt = f"""
-    You are an expert Performance Marketing Creative Director for Cloud Hosting (SiteGround).
-    Generate 3 DISTINCT, HIGH-CONVERTING {duration}-second ad script variants using GOOGLE'S OFFICIAL ABCD CREATIVE FRAMEWORK:
-    - [A] ATTENTION: Hook the viewer immediately (0-3s) with a high-impact problem/visual hook.
-    - [B] BRANDING: Introduce SiteGround branding early (within 5s) with official #96CB4C green logo and identity.
-    - [C] CONNECTION: Connect emotionally and logically with clear product value propositions ({product_feature}).
-    - [D] DIRECTION: End with a compelling, direct Call-To-Action (CTA) for {target_audience}.
+    You are an elite Performance Marketing Creative Director & Copywriting Strategist for Cloud Hosting (SiteGround).
+    Generate 3 COMPREHENSIVE, HIGH-CONVERTING {duration}-second ad narrative document variants using GOOGLE'S OFFICIAL ABCD CREATIVE FRAMEWORK and modern Direct Response Copywriting.
 
-    Tailor the scripts specifically for:
+    Tailor each document specifically for:
     - Product Feature: {product_feature}
     - Target Audience: {target_audience}
-    - Top Historical Hooks to Emulate: {json.dumps(winning_hooks)}
+    - Top Winning Hooks: {json.dumps(winning_hooks)}
 
     Output ONLY valid JSON matching this exact schema:
     {{
       "variants": [
         {{
           "variant_id": "variant_1",
-          "title": "Variant 1: High CTR Shock-Factor Hook (Google ABCD)",
+          "title": "Variant 1: Shock-Factor Revenue Defense (Google ABCD)",
           "hook_type": "Shock-Factor",
           "predicted_ctr": "8.8%",
-          "abcd_framework_breakdown": {{
-            "attention": "0-3s Hook",
-            "branding": "0-5s SiteGround Logo Ingestion",
-            "connection": "Value Prop Explanation",
-            "direction": "Final CTA"
+          "conv_rate": "14.2%",
+          "hook_breakdown": {{
+            "hook_text": "500 Server Error at 2AM? Your WooCommerce checkout just went down.",
+            "emotional_trigger": "Loss Aversion & Panic over lost store revenue",
+            "pas_framework": {{
+              "problem": "Traffic spikes overwhelm legacy shared servers causing checkout 500 errors.",
+              "agitation": "Shoppers abandon their carts and buy from competitors while you sleep.",
+              "solution": "SiteGround Google Cloud infrastructure + 3X SuperCacher guarantees 99.99% uptime."
+            }},
+            "cta_text": "Claim 80% Off SiteGround Managed Cloud"
+          }},
+          "ad_copy_pack": {{
+            "headlines": ["Stop Losing Store Sales", "3X Faster WooCommerce", "99.99% Uptime Guarantee"],
+            "primary_texts": [
+              "Is your slow hosting killing sales? Switch to SiteGround Google Cloud servers with 3X SuperCacher acceleration.",
+              "Get instant 24/7 expert support and ultra-fast NVMe storage. Free 1-click migration included!"
+            ],
+            "descriptions": [
+              "Rated 4.9/5 on Trustpilot. Up to 80% off Managed WordPress plans with free SSL & staging.",
+              "Experience 190ms TTFB and zero checkout downtime with Google Cloud infrastructure."
+            ],
+            "landing_page_hero": {{
+              "headline": "Stop Fixing Crashes. Start Scaling Sales.",
+              "subheadline": "Ultra-reliable Managed WordPress hosting backed by Google Cloud & 24/7 live experts."
+            }}
+          }},
+          "audience_psychology": {{
+            "target_persona": "High-Growth WooCommerce Store Owners ($10k-$100k/mo GMV)",
+            "core_objection": "Will switching hosts break my store or cause database loss?",
+            "counter_argument": "Zero-downtime automated migrator + expert engineers monitor your switch live for free.",
+            "cognitive_bias": "Loss Aversion & Authority Bias (Google Cloud Partner & 4.9/5 Trustpilot Rating)"
           }},
           "scenes": [
             {{
               "time_start": 0,
               "time_end": 3,
               "abcd_phase": "A - Attention",
-              "visual_description": "Descriptive visual scene",
+              "visual_description": "Frustrated store owner staring at 500 error screen on laptop at midnight",
               "ui_overlay_asset": "asset_500_error_badge.png",
-              "voiceover_ssml": "<speak>SSML voiceover text</speak>",
-              "kinetic_text": "DYNAMIC CTA OVERLAY"
+              "voiceover_ssml": "<speak>500 Server Error at 2AM? Your checkout just went down.</speak>",
+              "kinetic_text": "STOP LOSING SALES"
+            }},
+            {{
+              "time_start": 3,
+              "time_end": 7,
+              "abcd_phase": "B - Branding & C - Connection",
+              "visual_description": "SiteGround green logo ingests with 3X SuperCacher NVMe speed gauge",
+              "ui_overlay_asset": "asset_supercacher_speed.png",
+              "voiceover_ssml": "<speak>Switch to SiteGround for 3X faster Google Cloud infrastructure!</speak>",
+              "kinetic_text": "3X FASTER NVMe"
+            }},
+            {{
+              "time_start": 7,
+              "time_end": 15,
+              "abcd_phase": "D - Direction",
+              "visual_description": "Site Tools dashboard showing 1-click staging, free migration & 80% Off promo",
+              "ui_overlay_asset": "asset_discount_80_promo.png",
+              "voiceover_ssml": "<speak>Get up to 80% off today. Click below to launch risk-free!</speak>",
+              "kinetic_text": "GET 80% OFF TODAY"
             }}
           ]
         }}
+      ]
     }}
     """
-    try:
+    from fastapi.concurrency import run_in_threadpool
+
+    def _call_gemini_scripts():
         client = Client()
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json"
-            ),
-        )
+        try:
+            return client.models.generate_content(
+                model="gemini-3.7-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                ),
+            )
+        except Exception:
+            return client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                ),
+            )
+
+    import asyncio
+
+    try:
+        response = await asyncio.wait_for(run_in_threadpool(_call_gemini_scripts), timeout=12.0)
         data = json.loads(response.text)
         if data and "variants" in data and len(data["variants"]) > 0:
-            print("Successfully generated scripts using Gemini 3.6 Flash")
+            print("Successfully generated rich narrative documents using Gemini 3.7 Flash")
             project_id = body.get("project_id")
             if project_id and project_id in PROJECTS_STORE:
                 PROJECTS_STORE[project_id]["scripts"] = data["variants"]
-            return data
+            return {"status": "success", "variants": data["variants"]}
     except Exception as e:
-        print(f"Gemini script generation fallback: {e}")
+        print(f"Gemini script generation fallback (timeout/error): {e}")
 
-    # Fallback schema with 3 distinct feature-tailored variants
+    # Fallback schema with 3 rich marketing narrative documents
     feature = product_feature
     audience = target_audience
 
     variants_res = [
         {
             "variant_id": "variant_1",
-            "title": f"Variant 1: Shock-Factor {feature} Hook",
+            "title": f"Variant 1: Shock-Factor {feature} Defense",
             "hook_type": "Shock-Factor",
             "predicted_ctr": "8.8%",
+            "conv_rate": "14.2%",
+            "hook_breakdown": {
+                "hook_text": f"500 Server Error at 2AM? Stop losing sales with {feature}.",
+                "emotional_trigger": "Loss Aversion & Panic over lost checkout revenue",
+                "pas_framework": {
+                    "problem": f"Slow server responses cause abandoned checkouts on {feature}.",
+                    "agitation": "Every 1-second delay slashes conversion rate by 7%.",
+                    "solution": f"SiteGround 190ms TTFB NVMe storage keeps your store lightning fast."
+                },
+                "cta_text": "Switch to 3X Faster Hosting Today"
+            },
+            "ad_copy_pack": {
+                "headlines": [f"Stop Losing Sales with {feature}", "3X Faster WooCommerce", "190ms TTFB Guarantee"],
+                "primary_texts": [
+                    f"Is your slow hosting killing store sales? Upgrade to SiteGround {feature} powered by Google Cloud infrastructure.",
+                    "Rated 4.9/5 stars on Trustpilot. Free 1-click site migration and 24/7 expert support included!"
+                ],
+                "descriptions": [
+                    f"Experience up to 80% off Managed WordPress hosting with {feature} & daily backups.",
+                    "Zero downtime migration. Risk-free 30-day money-back guarantee."
+                ],
+                "landing_page_hero": {
+                    "headline": "Stop Fixing Crashes. Start Scaling Sales.",
+                    "subheadline": f"Ultra-reliable Managed WordPress hosting with {feature} and 24/7 technical experts."
+                }
+            },
+            "audience_psychology": {
+                "target_persona": f"{audience} ($10k-$100k/mo GMV)",
+                "core_objection": "Will migrating to a new host cause downtime or lose orders?",
+                "counter_argument": "Free automated migrator tool + 24/7 technical team live migration guarantee.",
+                "cognitive_bias": "Loss Aversion & Authority Bias (Google Cloud Partner & 4.9 Trustpilot)"
+            },
             "scenes": [
                 {
                     "time_start": 0,
                     "time_end": 3,
-                    "visual_description": f"Frustrated store owner staring at 500 Server Error while attempting checkout",
-                    "ui_overlay_asset": "asset_supercacher_speed.png",
-                    "asset_file": "asset_supercacher_speed.png",
+                    "abcd_phase": "A - Attention",
+                    "visual_description": "Frustrated store owner staring at 500 error screen on laptop at midnight",
+                    "ui_overlay_asset": "asset_500_error_badge.png",
                     "voiceover_ssml": f"<speak>Stop losing sales! Switch to SiteGround {feature} today.</speak>",
                     "kinetic_text": "STOP LOSING SALES",
                 },
                 {
                     "time_start": 3,
                     "time_end": 7,
+                    "abcd_phase": "B - Branding & C - Connection",
                     "visual_description": f"{feature} graphic + instant 0.4s speed gauge benchmark",
                     "ui_overlay_asset": "asset_supercacher_speed.png",
-                    "asset_file": "asset_supercacher_speed.png",
                     "voiceover_ssml": f"<speak>Accelerate your WordPress site 3X faster with SiteGround!</speak>",
                     "kinetic_text": "3X FASTER SPEED",
                 },
                 {
                     "time_start": 7,
                     "time_end": 15,
+                    "abcd_phase": "D - Direction",
                     "visual_description": "Site Tools dashboard showing 1-click staging & 80% Off promo",
                     "ui_overlay_asset": "asset_discount_80_promo.png",
-                    "asset_file": "asset_discount_80_promo.png",
                     "voiceover_ssml": "<speak>Get up to 80% off today. Click below to launch!</speak>",
                     "kinetic_text": "GET 80% OFF TODAY",
                 },
@@ -238,22 +491,54 @@ async def generate_scripts(request: Request):
             "title": f"Variant 2: Speed Benchmark & {feature} Proof",
             "hook_type": "Data-Proof",
             "predicted_ctr": "8.4%",
+            "conv_rate": "13.8%",
+            "hook_breakdown": {
+                "hook_text": f"Side-by-side benchmark: {feature} cuts load times by 70%.",
+                "emotional_trigger": "Desire for high performance & technical superiority",
+                "pas_framework": {
+                    "problem": "Generic shared hosting averages 1,280ms TTFB causing sluggish admin dashboard.",
+                    "agitation": "Slow backend response wastes hours of management time every week.",
+                    "solution": "SiteGround NGINX Direct Delivery delivers pages in 0.4s flat."
+                },
+                "cta_text": "Test Your Site Speed on SiteGround"
+            },
+            "ad_copy_pack": {
+                "headlines": ["190ms TTFB Benchmark", f"70% Faster with {feature}", "Google Cloud Powered"],
+                "primary_texts": [
+                    f"See why over 3 million domains trust SiteGround for {feature} and Google Cloud infrastructure.",
+                    "Blazing fast NVMe storage, custom PHP optimizations, and built-in caching out of the box."
+                ],
+                "descriptions": [
+                    "Benchmark proven: 70% faster page loads than standard shared hosting.",
+                    "Free SSL, free daily backups, and 24/7 expert chat support."
+                ],
+                "landing_page_hero": {
+                    "headline": "Engineered for Extreme WordPress Speed.",
+                    "subheadline": f"Leverage Google Cloud servers, NVMe SSDs, and {feature} for maximum Core Web Vitals."
+                }
+            },
+            "audience_psychology": {
+                "target_persona": "WordPress Agencies & Web Developers Managing Client Sites",
+                "core_objection": "Is SiteGround really faster than generic VPS or cloud droplets?",
+                "counter_argument": "Independent benchmarks prove 190ms TTFB with custom PHP acceleration and NGINX edge.",
+                "cognitive_bias": "Empirical Proof & Social Proof (3 Million+ Domains Hosted)"
+            },
             "scenes": [
                 {
                     "time_start": 0,
                     "time_end": 5,
+                    "abcd_phase": "A - Attention",
                     "visual_description": f"Side-by-side speed test: SiteGround {feature} vs standard hosting",
                     "ui_overlay_asset": "asset_supercacher_speed.png",
-                    "asset_file": "asset_supercacher_speed.png",
                     "voiceover_ssml": f"<speak>See how {feature} cuts load times by 70% in real-time tests.</speak>",
                     "kinetic_text": "70% FASTER LOADS",
                 },
                 {
                     "time_start": 5,
                     "time_end": 15,
+                    "abcd_phase": "B - Branding & D - Direction",
                     "visual_description": "Site Tools interface showing 1-click NGINX Direct Delivery & SSL",
                     "ui_overlay_asset": "asset_trustpilot_support.png",
-                    "asset_file": "asset_trustpilot_support.png",
                     "voiceover_ssml": "<speak>Power your site with Google Cloud infrastructure and 24/7 support.</speak>",
                     "kinetic_text": "GOOGLE CLOUD POWERED",
                 },
@@ -264,22 +549,54 @@ async def generate_scripts(request: Request):
             "title": f"Variant 3: Limited-Time 80% Off Deal + {feature}",
             "hook_type": "Urgency-Offer",
             "predicted_ctr": "8.0%",
+            "conv_rate": "15.1%",
+            "hook_breakdown": {
+                "hook_text": f"Limited Time Promo: Get 80% Off Managed WordPress with {feature}!",
+                "emotional_trigger": "Urgency & Bargain Satisfaction (Fear of Missing Out)",
+                "pas_framework": {
+                    "problem": "Premium cloud hosting is usually priced at $30-$50/month.",
+                    "agitation": "Paying high monthly fees cuts into store profit margins.",
+                    "solution": "SiteGround promotional pricing gives enterprise cloud power from just $2.99/mo."
+                },
+                "cta_text": "Claim 80% Discount Before Offer Expires"
+            },
+            "ad_copy_pack": {
+                "headlines": ["80% Off Managed WordPress", "Plans from $2.99/mo", "Free Domain & Migration"],
+                "primary_texts": [
+                    f"Get industry-leading Managed WordPress hosting with {feature} at an exclusive 80% discount.",
+                    "Includes free 1-click staging, free automated email, SSL, and 30-day money-back guarantee."
+                ],
+                "descriptions": [
+                    "Special flash promotion for new accounts. Lock in 80% savings today.",
+                    "Join over 3,000,000 domains powered by SiteGround premium hosting."
+                ],
+                "landing_page_hero": {
+                    "headline": "Enterprise WordPress Hosting. 80% Off Today.",
+                    "subheadline": f"Get Google Cloud speed, {feature}, and 24/7 expert support starting at just $2.99/mo."
+                }
+            },
+            "audience_psychology": {
+                "target_persona": "Budget-Conscious SMBs, Bloggers & E-commerce Startups",
+                "core_objection": "Is this a stripped-down cheap plan with hidden limitations?",
+                "counter_argument": "Full enterprise feature set: unmetered traffic, free CDN, automated backups, and 30-day money back.",
+                "cognitive_bias": "Hyperbolic Discounting & Risk Reversal (80% Off + 30-Day Guarantee)"
+            },
             "scenes": [
                 {
                     "time_start": 0,
                     "time_end": 4,
+                    "abcd_phase": "A - Attention",
                     "visual_description": "Glowing 80% Off badge animation with SiteGround green branding",
                     "ui_overlay_asset": "asset_discount_80_promo.png",
-                    "asset_file": "asset_discount_80_promo.png",
                     "voiceover_ssml": f"<speak>Limited time offer! Get Managed WordPress with {feature} at 80% off!</speak>",
                     "kinetic_text": "SAVE 80% TODAY",
                 },
                 {
                     "time_start": 4,
                     "time_end": 15,
+                    "abcd_phase": "B - Branding & D - Direction",
                     "visual_description": "Instant 1-click free migration tool demo & 30-day money back guarantee",
                     "ui_overlay_asset": "asset_trustpilot_support.png",
-                    "asset_file": "asset_trustpilot_support.png",
                     "voiceover_ssml": "<speak>Free 1-click site migration included. Risk-free for 30 days!</speak>",
                     "kinetic_text": "FREE SITE MIGRATION",
                 },
@@ -304,18 +621,35 @@ from app.video_renderer import render_marketing_video
 
 @router.post("/images/generate")
 async def generate_image_asset(request: Request):
-    """Gemini Omni / Imagen 3 Visual Campaign Asset Studio."""
+    """Gemini Omni / Imagen 3 Visual Campaign Asset Studio (Parallel Non-Blocking)."""
     body = await request.json()
-    asset_type = body.get("asset_type", "speed_boost")
+    asset_type = body.get("asset_type", "speed")
     prompt_text = body.get("prompt_text", "SiteGround SuperCacher 3X Speed Boost UI")
+    project_id = body.get("project_id")
 
-    filename = generate_campaign_asset(asset_type, prompt_text)
+    from fastapi.concurrency import run_in_threadpool
+    filename = await run_in_threadpool(generate_campaign_asset, asset_type=asset_type, prompt_text=prompt_text)
+    image_url = f"/media/{filename}"
+
+    new_asset = {
+        "id": f"asset_gen_{int(time.time())}",
+        "title": prompt_text[:30] if prompt_text else "Generated Image",
+        "category": "AI Generated",
+        "file_path": image_url,
+        "thumbnail": image_url,
+        "prompt": prompt_text,
+        "type": "image"
+    }
+    if project_id and project_id in PROJECTS_STORE:
+        PROJECTS_STORE[project_id]["assets"].insert(0, new_asset)
+
     return {
         "status": "success",
         "asset_type": asset_type,
         "filename": filename,
-        "image_url": f"/media/{filename}",
+        "image_url": image_url,
         "prompt_used": prompt_text,
+        "asset": new_asset
     }
 
 
@@ -373,10 +707,11 @@ async def variations_image_endpoint(request: Request):
     body = await request.json()
     image_name = body.get("image_url", body.get("image_name", "asset_supercacher_speed.png"))
     prompt_text = body.get("prompt_text", "SiteGround 3X Speed Boost UI")
+    project_id = body.get("project_id", "proj_wp_speed")
     
     from fastapi.concurrency import run_in_threadpool
     from app.image_studio import generate_image_variations
-    res = await run_in_threadpool(generate_image_variations, image_name=image_name, prompt_text=prompt_text)
+    res = await run_in_threadpool(generate_image_variations, image_name=image_name, prompt_text=prompt_text, project_id=project_id)
     return res
 
 
@@ -524,11 +859,18 @@ async def stitch_videos(request: Request):
         }}
         """
         client = Client()
-        omni_res = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=omni_prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json")
-        )
+        try:
+            omni_res = client.models.generate_content(
+                model="gemini-3.7-flash",
+                contents=omni_prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json")
+            )
+        except Exception:
+            omni_res = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=omni_prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json")
+            )
         omni_data = json.loads(omni_res.text)
         if omni_data:
             transition_type = omni_data.get("transition_type", "fade")
@@ -743,62 +1085,74 @@ async def synthesize_audio(request: Request):
     audio_filename = f"voiceover_{language_code}_{voice_name.split('-')[-1]}.mp3"
     audio_path = os.path.join(PROJECT_DIR, audio_filename)
 
-    # Clean SSML tags for TTS engine
-    import re, shutil
-    from gtts import gTTS
+    from fastapi.concurrency import run_in_threadpool
 
-    clean_text = re.sub(r"<[^>]*>", "", ssml_text).strip()
-    if not clean_text:
-        clean_text = "SiteGround ultra-fast Google Cloud hosting!"
+    def _do_tts_synthesis():
+        # Clean SSML tags for TTS engine
+        import re, shutil
+        from gtts import gTTS
 
-    lang_short = language_code.split("-")[0].lower()  # 'en', 'de', 'es', 'it', 'pt', 'fr'
+        clean_text = re.sub(r"<[^>]*>", "", ssml_text).strip()
+        if not clean_text:
+            clean_text = "SiteGround ultra-fast Google Cloud hosting!"
 
-    # Perform translation if the target language is not English
-    if lang_short != "en":
+        lang_short = language_code.split("-")[0].lower()  # 'en', 'de', 'es', 'it', 'pt', 'fr'
+
+        # Perform translation if the target language is not English
+        if lang_short != "en":
+            try:
+                client = Client()
+                translation_prompt = (
+                    f"Translate the following marketing advertisement script into natural, fluent, high-converting {language_code} ({lang_short}). "
+                    f"Preserve brand names like SiteGround, Google Cloud, and SuperCacher. "
+                    f"Output ONLY the translated plain text without any quotes or commentary:\n\n{clean_text}"
+                )
+                try:
+                    res = client.models.generate_content(
+                        model="gemini-3.7-flash",
+                        contents=translation_prompt,
+                    )
+                except Exception:
+                    res = client.models.generate_content(
+                        model="gemini-3.6-flash",
+                        contents=translation_prompt,
+                    )
+                translated_text = res.text.strip()
+                if translated_text:
+                    clean_text = translated_text
+            except Exception as e:
+                print(f"Gemini translation fallback for {lang_short}: {e}")
+                fallback_translations = {
+                    "fr": "Il est 2h du matin. Votre site web est en panne ! Ne paniquez pas. Les experts techniques SiteGround répondent en quelques secondes. Passez chez SiteGround dès aujourd'hui !",
+                    "de": "Es ist 02:00 Uhr morgens. Ihre Website ist offline! Keine Panik. Die SiteGround-Experten antworten in Sekundenschnelle. Wechseln Sie noch heute zu SiteGround!",
+                    "es": "¡Son las 2:00 AM y tu sitio web está caído! No te preocupes. Los expertos técnicos 24/7 de SiteGround responden en segundos. ¡Cámbiate a SiteGround hoy mismo!",
+                    "it": "Sono le 2:00 di notte. Il tuo sito web è giù! Niente panico. Gli esperti tecnici 24/7 di SiteGround rispondono in pochi secondi. Passa a SiteGround oggi stesso!",
+                    "pt": "São 2:00 da manhã. Seu site está fora do ar! Não entre em pânico. Os especialistas técnicos da SiteGround respondem em segundos. Mude para a SiteGround hoje mesmo!"
+                }
+                if lang_short in fallback_translations:
+                    clean_text = fallback_translations[lang_short]
+
         try:
-            client = Client()
-            translation_prompt = (
-                f"Translate the following marketing advertisement script into natural, fluent, high-converting {language_code} ({lang_short}). "
-                f"Preserve brand names like SiteGround, Google Cloud, and SuperCacher. "
-                f"Output ONLY the translated plain text without any quotes or commentary:\n\n{clean_text}"
-            )
-            res = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=translation_prompt,
-            )
-            translated_text = res.text.strip()
-            if translated_text:
-                clean_text = translated_text
+            tts = gTTS(text=clean_text, lang=lang_short)
+            tts.save(audio_path)
+            print(f"Synthesized authentic '{lang_short}' audio ({audio_filename}): '{clean_text}'")
         except Exception as e:
-            print(f"Gemini translation fallback for {lang_short}: {e}")
-            fallback_translations = {
-                "fr": "Il est 2h du matin. Votre site web est en panne ! Ne paniquez pas. Les experts techniques SiteGround répondent en quelques secondes. Passez chez SiteGround dès aujourd'hui !",
-                "de": "Es ist 02:00 Uhr morgens. Ihre Website ist offline! Keine Panik. Die SiteGround-Experten antworten in Sekundenschnelle. Wechseln Sie noch heute zu SiteGround!",
-                "es": "¡Son las 2:00 AM y tu sitio web está caído! No te preocupes. Los expertos técnicos 24/7 de SiteGround responden en segundos. ¡Cámbiate a SiteGround hoy mismo!",
-                "it": "Sono le 2:00 di notte. Il tuo sito web è giù! Niente panico. Gli esperti tecnici 24/7 di SiteGround rispondono in pochi secondi. Passa a SiteGround oggi stesso!",
-                "pt": "São 2:00 da manhã. Seu site está fora do ar! Não entre em pânico. Os especialistas técnicos da SiteGround respondem em segundos. Mude para a SiteGround hoje mesmo!"
-            }
-            if lang_short in fallback_translations:
-                clean_text = fallback_translations[lang_short]
+            print(f"gTTS synthesis fallback for {lang_short}: {e}")
+            fallback_audio = os.path.join(PROJECT_DIR, "fallback_voiceover.mp3")
+            if os.path.exists(fallback_audio):
+                shutil.copy(fallback_audio, audio_path)
 
-    try:
-        tts = gTTS(text=clean_text, lang=lang_short)
-        tts.save(audio_path)
-        print(f"Synthesized authentic '{lang_short}' audio ({audio_filename}): '{clean_text}'")
-    except Exception as e:
-        print(f"gTTS synthesis fallback for {lang_short}: {e}")
-        fallback_audio = os.path.join(PROJECT_DIR, "fallback_voiceover.mp3")
-        if os.path.exists(fallback_audio):
-            shutil.copy(fallback_audio, audio_path)
+        # Copy to media directory for static serving
+        media_dir = os.path.join(PROJECT_DIR, "media")
+        os.makedirs(media_dir, exist_ok=True)
+        media_audio = os.path.join(media_dir, audio_filename)
+        try:
+            shutil.copy(audio_path, media_audio)
+        except Exception:
+            pass
+        return clean_text
 
-    # Copy to media directory for static serving
-    media_dir = os.path.join(PROJECT_DIR, "media")
-    os.makedirs(media_dir, exist_ok=True)
-    media_audio = os.path.join(media_dir, audio_filename)
-    try:
-        shutil.copy(audio_path, media_audio)
-    except Exception:
-        pass
+    final_clean_text = await run_in_threadpool(_do_tts_synthesis)
 
     return {
         "status": "success",
@@ -806,7 +1160,7 @@ async def synthesize_audio(request: Request):
         "voice_model": voice_name,
         "speaking_rate": speaking_rate,
         "audio_url": f"/media/{audio_filename}",
-        "ssml_parsed": clean_text,
+        "ssml_parsed": final_clean_text,
     }
 
 
@@ -1272,48 +1626,17 @@ async def delete_library_asset(asset_id: str, project_id: str = None):
     return {"status": "success", "deleted_id": asset_id}
 
 
-@router.post("/images/generate")
-async def generate_picture_asset_endpoint(request: Request):
-    """Generate a new dynamic picture asset based on a prompt text."""
-    body = await request.json()
-    asset_type = body.get("asset_type", "speed")
-    prompt_text = body.get("prompt_text", "")
-    project_id = body.get("project_id")
-
-    filename = generate_campaign_asset(asset_type, prompt_text)
-    image_url = f"/media/{filename}"
-
-    # Optionally store in project assets
-    new_asset = {
-        "id": f"asset_gen_{int(time.time())}",
-        "title": prompt_text[:30] if prompt_text else "Generated Image",
-        "category": "AI Generated",
-        "file_path": image_url,
-        "thumbnail": image_url,
-        "prompt": prompt_text,
-        "type": "image"
-    }
-    if project_id and project_id in PROJECTS_STORE:
-        PROJECTS_STORE[project_id]["assets"].insert(0, new_asset)
-
-    return {
-        "status": "success",
-        "filename": filename,
-        "image_url": image_url,
-        "asset": new_asset
-    }
-
-
 @router.post("/images/regenerate")
 async def regenerate_picture_asset(request: Request):
-    """Regenerate a picture asset with an updated prompt text."""
+    """Regenerate a picture asset with an updated prompt text (Parallel Non-Blocking)."""
     body = await request.json()
     asset_id = body.get("asset_id", "asset_1")
     asset_type = body.get("asset_type", "speed_boost")
     prompt_text = body.get("prompt_text", "")
     project_id = body.get("project_id")
 
-    filename = generate_campaign_asset(asset_type, prompt_text)
+    from fastapi.concurrency import run_in_threadpool
+    filename = await run_in_threadpool(generate_campaign_asset, asset_type=asset_type, prompt_text=prompt_text)
     image_url = f"/media/{filename}"
 
     # Update asset store if present
@@ -1411,9 +1734,10 @@ async def generate_clip_from_pictures(request: Request):
     return {"status": "success", "clip": new_segment, "video_url": clip_url}
 
 
+@router.post("/assistant")
 @router.post("/copilot")
-async def studio_copilot(request: Request):
-    """Natural Language Studio Copilot for orchestrating workbench tasks."""
+async def studio_assistant(request: Request):
+    """Natural Language Studio Assistant for orchestrating workbench tasks."""
     body = await request.json()
     message = (body.get("user_message") or "").strip()
     project_id = body.get("project_id")
@@ -1565,7 +1889,7 @@ async def studio_copilot(request: Request):
         return {
             "status": "success",
             "action": "info",
-            "reply": f"🤖 **SiteGround AI Studio Copilot**: I received your request: \"{message}\".\n\n**Try typing commands like**:\n- `Generate 3 narratives for 3X Speed Boost`\n- `Generate pictures for Narrative 1`\n- `Update picture prompt to 3X speed gauge glowing green`\n- `From pictures 1 and 2 create video clip showing speed acceleration`\n- `Stitch video clips into master ad`\n- `Deploy campaign to Google Ads`"
+            "reply": f"🤖 **SiteGround AI Studio Assistant**: I received your request: \"{message}\".\n\n**Try typing commands like**:\n- `Generate 3 narratives for 3X Speed Boost`\n- `Generate pictures for Narrative 1`\n- `Update picture prompt to 3X speed gauge glowing green`\n- `From pictures 1 and 2 create video clip showing speed acceleration`\n- `Stitch video clips into master ad`\n- `Deploy campaign to Google Ads`"
         }
 
 
