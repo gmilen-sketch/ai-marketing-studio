@@ -21,9 +21,10 @@ class SiteGroundVideoAgentNode(BaseNode):
         # Use private attributes (prefixed with '_') to avoid Pydantic field validation errors on BaseNode
         self._client = genai.Client()
         self._bq_client = bigquery.Client()
-        self._script_model = "gemini-3.5-flash"
-        self._video_model = "models/veo-3.2-creative-generate-002;backend_beyond"
-        self._editor_model = "gemini-omni-flash-preview"
+        self._script_model = "gemini-3.8-flash"
+        self._reasoning_model = "gemini-4-argon"
+        self._video_model = "veo-3.1-lite"
+        self._editor_model = "gemini-3.8-flash"
 
     def fetch_pmax_telemetry(self, campaign_category: str) -> str:
         """Fetch past top-performing campaign hooks from BigQuery."""
